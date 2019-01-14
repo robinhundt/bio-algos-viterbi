@@ -1,45 +1,47 @@
 package viterbi;
 
 public class Viterbi {
-    private static double[][] toLog(double[][] matrix) {
-        for(int i = 0; i<matrix.length; i++) {
-            for(int j = 0; j<matrix[0].length; j++) {
-                matrix[i][j] = Math.log(matrix[i][j]);
-            }
-        }
-        return matrix;
-    }
-
-
-
+    /**
+     * Calculates the viterbi path given a sequence of observations and a model.
+     * The observations are expected to be elements of [0, |EmissionStates|).
+     * @param observations Sequence of observations
+     * @param initialProbabilities For k element of States, initialProbabilities[k] is the probability that a
+     *                             state sequence starts with k
+     * @param transitionMatrix Provides the probabilities with which state transitions occur.
+     *                         transitionMatrix[j][k] = 0.25 means that there is a chance of 0.25 to go from state
+     *                         j to state k. Size must be |States| x |States| .
+     * @param emissionMatrix  Provides the probabilities with which an emission occurs, given a state.
+     *                        emissionMatrix[j][o] = 0.25 means that there is a 0.25 chance to emit an observation o
+     *                        when in state j
+     * @return the viterbi path
+     */
     public static int[] calc(int[] observations, double[] initialProbabilities, double[][] transitionMatrix, double[][] emissionMatrix) {
         int countStateSpace = transitionMatrix.length;
         double[][] viterbiVar = new double[countStateSpace][observations.length];
         int[][] backtrackingVar = new int[countStateSpace][observations.length];
 
+        /*
+            Logarithm is applied element wise to the transition and emission matrices. Computing the logithms of
+            the probabilities instead of the probabilities themselves ensures that the values stay in ranges which
+            can be represented by doubles.
+         */
         double[][] logTransitionMatrix = Viterbi.toLog(transitionMatrix.clone());
         double[][] logEmissionMatrix = Viterbi.toLog(emissionMatrix.clone());
 
+        /*
+            Initialise first column
+         */
         for(int state = 0; state < countStateSpace; state++) {
             viterbiVar[state][0] = Math.log(initialProbabilities[state]) + logEmissionMatrix[state][observations[0]];
         }
 
-        for(int observation = 1; observation < observations.length; observation++) {
-            for(int state = 0; state < countStateSpace; state++) {
-                double maxScore = viterbiVar[0][observation-1] + logTransitionMatrix[0][state];
-                int argMaxScore = 0;
-                for(int i = 1; i < countStateSpace; i++) {
-                    double score = viterbiVar[i][observation-1] + logTransitionMatrix[i][state];
-                    if (score > maxScore) {
-                        maxScore = score;
-                        argMaxScore = i;
-                    }
-                }
-                maxScore += logEmissionMatrix[state][observations[observation]];
-                viterbiVar[state][observation] = maxScore;
-                backtrackingVar[state][observation] = argMaxScore;
-            }
-        }
+        calcViterbiBacktrackVars(observations, countStateSpace, viterbiVar, backtrackingVar, logTransitionMatrix, logEmissionMatrix);
+
+        return reconstructOptimalPath(observations, countStateSpace, backtrackingVar);
+    }
+
+
+    private static int[] reconstructOptimalPath(int[] observations, int countStateSpace, int[][] backtrackingVar) {
         int[] path = new int[observations.length];
         int last = path.length - 1;
         path[last] = backtrackingVar[0][last];
@@ -52,5 +54,38 @@ public class Viterbi {
             path[observation-1] = backtrackingVar[path[observation]][observation];
         }
         return path;
+    }
+
+    private static void calcViterbiBacktrackVars(int[] observations, int countStateSpace, double[][] viterbiVar, int[][] backtrackingVar, double[][] logTransitionMatrix, double[][] logEmissionMatrix) {
+        for(int observationIdx = 1; observationIdx < observations.length; observationIdx++) {
+            for(int state = 0; state < countStateSpace; state++) {
+                double maxScore = viterbiVar[0][observationIdx -1] + logTransitionMatrix[0][state];
+                int argMaxScore = 0;
+                for(int i = 1; i < countStateSpace; i++) {
+                    double score = viterbiVar[i][observationIdx -1] + logTransitionMatrix[i][state];
+                    if (score > maxScore) {
+                        maxScore = score;
+                        argMaxScore = i;
+                    }
+                }
+                maxScore += logEmissionMatrix[state][observations[observationIdx]];
+                viterbiVar[state][observationIdx] = maxScore;
+                backtrackingVar[state][observationIdx] = argMaxScore;
+            }
+        }
+    }
+
+    /**
+     * Transforms the provided matrix by an element wise natural logarithm in place.
+     * @param matrix 2d matrix that should be transformed.
+     * @return the transformed matrix.
+     */
+    private static double[][] toLog(double[][] matrix) {
+        for(int i = 0; i<matrix.length; i++) {
+            for(int j = 0; j<matrix[0].length; j++) {
+                matrix[i][j] = Math.log(matrix[i][j]);
+            }
+        }
+        return matrix;
     }
 }
