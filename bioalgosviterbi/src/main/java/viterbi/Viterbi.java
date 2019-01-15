@@ -41,17 +41,19 @@ public class Viterbi {
 
         calcViterbiBacktrackVars(observations, countStateSpace, viterbiVar, backtrackingVar, logTransitionMatrix, logEmissionMatrix);
 
-        return reconstructOptimalPath(observations, countStateSpace, backtrackingVar);
+        return reconstructOptimalPath(observations, countStateSpace, backtrackingVar, viterbiVar);
     }
 
 
-    private static int[] reconstructOptimalPath(int[] observations, int countStateSpace, int[][] backtrackingVar) {
+    private static int[] reconstructOptimalPath(int[] observations, int countStateSpace, int[][] backtrackingVar, double[][] viterbiVar) {
         int[] path = new int[observations.length];
         int last = path.length - 1;
-        path[last] = backtrackingVar[0][last];
+        path[last] = 0;
+        double maxLastColumn = viterbiVar[0][last+1];
         for(int state = 1; state<countStateSpace; state++) {
-            if (backtrackingVar[state][last+1] > path[last]) {
-                path[last] = backtrackingVar[state][last+1];
+            if (viterbiVar[state][last+1] > maxLastColumn) {
+                maxLastColumn = viterbiVar[state][last+1];
+                path[last] = state;
             }
         }
         for(int observation = last; observation > 0; observation--) {
