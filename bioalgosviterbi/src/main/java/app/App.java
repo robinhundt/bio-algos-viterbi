@@ -2,8 +2,6 @@ package app;
 
 import fasta.FASTAParser;
 import phmm.ProfileHMM;
-import viterbi.EmissionMatrix;
-import viterbi.TransitionMatrix;
 import viterbi.*;
 
 import java.nio.file.Path;
