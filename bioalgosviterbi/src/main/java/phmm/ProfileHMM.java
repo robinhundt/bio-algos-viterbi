@@ -60,7 +60,7 @@ public class ProfileHMM {
         for (var i=1; i<matchStatesCount+insertionStatesCount; i++) {
             var rowsum = Arrays.stream(emissionMatrix[i]).sum();
             var divisor = rowsum + pseudoCount * (observationStatesCount - 1);
-            for(int j=0; j<emissionMatrix[i].length; j++) {
+            for(int j=0; j<emissionMatrix[i].length-1; j++) {
                 emissionMatrix[i][j] = (emissionMatrix[i][j] + pseudoCount) / divisor;
             }
         }
@@ -83,6 +83,13 @@ public class ProfileHMM {
     public double[][] getEmissionMatrix() {
         return emissionMatrix;
     }
+
+//    public ArrayList<int[]> getPossibleSuccessorIndeces(int index, int matchCount, int insertCount, int deleteCount) {
+//        var successors = new ArrayList<int[]>();
+//        if (index < matchCount) {
+//
+//        }
+//    }
 
     private ArrayDeque<Integer> getMatchColumns(ArrayList<FASTASequence> sequences, Character gapSymbol) {
         var matchColums = new ArrayDeque<Integer>();
