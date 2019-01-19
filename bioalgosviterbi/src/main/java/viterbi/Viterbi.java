@@ -15,7 +15,7 @@ public class Viterbi {
      *                        when in state j
      * @return the viterbi path
      */
-    public static int[] calc(int[] observations, double[] initialProbabilities, double[][] transitionMatrix, double[][] emissionMatrix) {
+    public static ViterbiResult calc(int[] observations, double[][] transitionMatrix, double[][] emissionMatrix) {
         int countStateSpace = transitionMatrix.length;
         double[][] viterbiVar = new double[countStateSpace][observations.length+1];
         int[][] backtrackingVar = new int[countStateSpace][observations.length+1];
@@ -30,18 +30,11 @@ public class Viterbi {
         double[][] logTransitionMatrix = Viterbi.toLog(transitionMatrix.clone());
         double[][] logEmissionMatrix = Viterbi.toLog(emissionMatrix.clone());
 
-        /*
-            Initialise first column
-         */
-        /*
-        for(int state = 0; state < countStateSpace; state++) {
-            viterbiVar[state][0] = Math.log(initialProbabilities[state]) + logEmissionMatrix[state][observations[0]];
-        }
-        */
+        double maxProbability = calcViterbiBacktrackVars(observations, countStateSpace, viterbiVar, backtrackingVar, logTransitionMatrix, logEmissionMatrix);
 
-        calcViterbiBacktrackVars(observations, countStateSpace, viterbiVar, backtrackingVar, logTransitionMatrix, logEmissionMatrix);
+        int[] path = reconstructOptimalPath(observations, countStateSpace, backtrackingVar, viterbiVar);
 
-        return reconstructOptimalPath(observations, countStateSpace, backtrackingVar, viterbiVar);
+        return new ViterbiResult(path, maxProbability);
     }
 
 
@@ -62,7 +55,8 @@ public class Viterbi {
         return path;
     }
 
-    private static void calcViterbiBacktrackVars(int[] observations, int countStateSpace, double[][] viterbiVar, int[][] backtrackingVar, double[][] logTransitionMatrix, double[][] logEmissionMatrix) {
+    private static double calcViterbiBacktrackVars(int[] observations, int countStateSpace, double[][] viterbiVar, int[][] backtrackingVar, double[][] logTransitionMatrix, double[][] logEmissionMatrix) {
+        double maxProbability = 0.;
         for(int observationIdx = 1; observationIdx <= observations.length; observationIdx++) {
             for(int state = 0; state < countStateSpace; state++) {
                 double maxScore = viterbiVar[0][observationIdx -1] + logTransitionMatrix[0][state];
@@ -76,9 +70,11 @@ public class Viterbi {
                 }
                 maxScore += logEmissionMatrix[state][observations[observationIdx-1]];
                 viterbiVar[state][observationIdx] = maxScore;
+                maxProbability = maxScore;
                 backtrackingVar[state][observationIdx] = argMaxScore;
             }
         }
+        return maxProbability;
     }
 
     /**

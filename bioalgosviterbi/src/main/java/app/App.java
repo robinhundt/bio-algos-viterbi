@@ -1,17 +1,16 @@
 package app;
 
 import fasta.FASTAParser;
+import phmm.ProfileHMM;
 import viterbi.EmissionMatrix;
 import viterbi.TransitionMatrix;
-import viterbi.Viterbi;
+import viterbi.*;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.Files;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Hello world!
@@ -43,31 +42,41 @@ public class App
 
     public static void main( String[] args )
     {
+        if (args.length < 1) {
+            System.out.println("Helpmessage");
+            return;
+        }
         try {
-            EmissionMatrix emissionMatrix = new EmissionMatrix();
-            TransitionMatrix transitionMatrix = new TransitionMatrix<>();
+            Character gapSymbol = '-';
+            HashMap<Character, Integer> observationMap = new HashMap<Character, Integer>(Map.of('A', 0, 'C', 1, 'G', 2, 'T', 3, 'U', 3, gapSymbol, 4));
+            int pseudoCount = 1;
+            // import training sequences
+            var trainingSequences = FASTAParser.parse(Paths.get(args[0]));
+
             // create profil HMM with test sequences
+            ProfileHMM pHMM = new ProfileHMM(trainingSequences, gapSymbol, observationMap, pseudoCount);
+            double[][] emissionMatrix = pHMM.getEmissionMatrix();
+            double[][] transitionMatrix = pHMM.getTransitionMatrix();
 
 
-            ArrayList<String> testFiles = getFileList(args[0]);
+            //get test sequences
+            ArrayList<String> testFiles = getFileList(args[1]);
 
-            Map<Character, Integer> map = Map.of('A', 0, 'C', 1, 'G', 2, 'T', 3, 'U', 3, '-', 4);
-            
             for (var testFile : testFiles) {
                 var sequences = FASTAParser.parse(Paths.get(testFile));
                 ArrayList<int[]> observationLines = new ArrayList<int[]>(sequences.size());
                 ArrayList<String> vitProbabilities = new ArrayList<String>(testFile.length());
 
                 for (var sequence : sequences) {
-                    observationLines.add(sequence.parseBasesToInt(map));
+                    observationLines.add(sequence.parseBasesToInt(observationMap));
                 }
 
                 for (var observations: observationLines) {
                     //calculate viterbi path and probability
-                    /*
-                    ViterbiResult result = Viterbi.calc(observations, transitionMatrix, emissionMatrix)
-                    vitProbabilities.add(result.probability);
-                    */
+                    
+                    ViterbiResult viterbiResult = Viterbi.calc(observations, transitionMatrix, emissionMatrix);
+                    vitProbabilities.add(String.valueOf(viterbiResult.getMaxProbability()));
+                    
                     ;
                 }
                 // create new file and store each probability in one line
