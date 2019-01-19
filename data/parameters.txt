@@ -1,0 +1,6 @@
+trainingData:../data/train/LSU_train.fasta
+testData:../data/test/
+outputFolder:target/
+backgroundFile:
+emissionPseudocounts:1
+transitionPseudocounts:1
