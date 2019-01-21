@@ -143,48 +143,208 @@ public class ProfileHMMTest {
 
     }
 
-//    @Test
-//    public void testTransitionMatrixOnlyMatch() {
-//        var sequences = new ArrayList<FASTASequence>();
-//
-//        sequences.add(new FASTASequence("1", new char[]{'A', '-', 'C'}));
-//        sequences.add(new FASTASequence("2", new char[]{'A', 'G', 'C'}));
-//        sequences.add(new FASTASequence("3", new char[]{'A', 'A', '-'}));
-//        sequences.add(new FASTASequence("4", new char[]{'-', 'A', 'C'}));
-//        sequences.add(new FASTASequence("5", new char[]{'A', '-', 'C'}));
-//
-//        var observationMap = createObersavtionMap();
-//
-//        var profileHmm = new ProfileHMM(sequences, '-', observationMap, 1);
-//
-//        var transitionMatrix = new double[][]{
-////                    0 1 2 3 4 0 1 2 3 1 2 3
-///*0*/                {0,1,0,0,0,0,0,0,0,0,0,0},
-///*1*/                {0,0,2,0,0,0,0,0,0,0,2,0},
-///*2*/                {0,0,0,2,0,0,0,0,0,0,0,1},
-///*3*/                {0,0,0,0,4,0,0,0,0,0,0,0},
-///*4*/                {0,0,0,0,0,0,0,0,0,0,0,0},
-///*0*/                {0,0,0,0,0,0,0,0,0,0,0,0},
-///*1*/                {0,0,0,0,0,0,0,0,0,0,0,0},
-///*2*/                {0,0,0,0,0,0,0,0,0,0,0,0},
-///*3*/                {0,0,0,0,0,0,0,0,0,0,0,0},
-///*1*/                {0,0,1,0,0,0,0,0,0,0,0,0},
-///*2*/                {0,0,0,2,0,0,0,0,0,0,0,0},
-///*3*/                {0,0,0,0,0,0,0,0,0,0,0,0},
-//        };
-//
-//        //skip first and last match state, also delete states
-//        for (var i=1; i<expectedEmissionMatrix.length - 4; i++) {
-//            if (i==5)
-//                continue;
-//            var rowsum = Arrays.stream(expectedEmissionMatrix[i]).sum();
-//            var divisor = rowsum + 4; // add pseudocount
-//            for(int j=0; j<expectedEmissionMatrix[i].length -1; j++) {
-//                expectedEmissionMatrix[i][j] = (expectedEmissionMatrix[i][j] + 1) / divisor;
+    @Test
+    public void testTransitionMatrixOnlyMatch() {
+        final var pseudoCount = 1;
+
+        var sequences = new ArrayList<FASTASequence>();
+
+        sequences.add(new FASTASequence("1", new char[]{'A', '-', 'C'}));
+        sequences.add(new FASTASequence("2", new char[]{'A', 'G', 'C'}));
+        sequences.add(new FASTASequence("3", new char[]{'A', 'A', '-'}));
+        sequences.add(new FASTASequence("4", new char[]{'-', 'A', 'C'}));
+        sequences.add(new FASTASequence("5", new char[]{'A', '-', 'C'}));
+
+        var observationMap = createObersavtionMap();
+
+        var profileHmm = new ProfileHMM(sequences, '-', observationMap, pseudoCount);
+
+        var expectedTransitionMatrix = new double[][]{
+//                    0 1 2 3 4 0 1 2 3 1 2 3
+/*0*/                {0,4,0,0,0,0,0,0,0,1,0,0},
+/*1*/                {0,0,2,0,0,0,0,0,0,0,2,0},
+/*2*/                {0,0,0,2,0,0,0,0,0,0,0,1},
+/*3*/                {0,0,0,0,4,0,0,0,0,0,0,0},
+/*4*/                {0,0,0,0,0,0,0,0,0,0,0,0},
+/*0*/                {0,0,0,0,0,0,0,0,0,0,0,0},
+/*1*/                {0,0,0,0,0,0,0,0,0,0,0,0},
+/*2*/                {0,0,0,0,0,0,0,0,0,0,0,0},
+/*3*/                {0,0,0,0,0,0,0,0,0,0,0,0},
+/*1*/                {0,0,1,0,0,0,0,0,0,0,0,0},
+/*2*/                {0,0,0,2,0,0,0,0,0,0,0,0},
+/*3*/                {0,0,0,0,1,0,0,0,0,0,0,0},
+        };
+
+//        for(var state=0; state<expectedTransitionMatrix.length-1; state++) {
+//            if (state == 4) {
+//                continue; // no transitions from final match
+//            }
+//            var successors = ProfileHMM.getPossibleSuccessorIndeces(state, 5, 4, 3);
+//            for(Integer succ : successors) {
+//                expectedTransitionMatrix[state][succ] += pseudoCount;
+//            }
+//            var rowsum = Arrays.stream(expectedTransitionMatrix[state]).sum();
+//            for(int j=0; j<expectedTransitionMatrix[state].length -1; j++) {
+//                expectedTransitionMatrix[state][j] /=  rowsum;
 //            }
 //        }
-//
-//    }
+
+        var transitionMatrix = profileHmm.getTransitionMatrix();
+
+        assertArrayEquals(expectedTransitionMatrix, transitionMatrix);
+
+    }
+
+    @Test
+    public void testTransitionMatrixOnlyNoMatchBeginning() {
+        final var pseudoCount = 1;
+
+        var sequences = new ArrayList<FASTASequence>();
+
+        sequences.add(new FASTASequence("1", new char[]{'A', 'A', 'C'}));
+        sequences.add(new FASTASequence("2", new char[]{'-', 'G', 'C'}));
+        sequences.add(new FASTASequence("3", new char[]{'-', '-', '-'}));
+        sequences.add(new FASTASequence("4", new char[]{'-', 'A', 'C'}));
+        sequences.add(new FASTASequence("5", new char[]{'A', '-', 'C'}));
+
+        var observationMap = createObersavtionMap();
+
+        var profileHmm = new ProfileHMM(sequences, '-', observationMap, pseudoCount);
+
+        var expectedTransitionMatrix = new double[][]{
+//                    0 1 2 3 0 1 2 1 2
+/*0*/                {0,2,0,0,2,0,0,1,0},
+/*1*/                {0,0,3,0,0,0,0,0,0},
+/*2*/                {0,0,0,4,0,0,0,0,0},
+/*3*/                {0,0,0,0,0,0,0,0,0},
+/*0*/                {0,1,0,0,0,0,0,1,0},
+/*1*/                {0,0,0,0,0,0,0,0,0},
+/*2*/                {0,0,0,0,0,0,0,0,0},
+/*1*/                {0,0,1,0,0,0,0,0,1},
+/*2*/                {0,0,0,1,0,0,0,0,0},
+        };
+
+//        for(var state=0; state<expectedTransitionMatrix.length-1; state++) {
+//            if (state == 4) {
+//                continue; // no transitions from final match
+//            }
+//            var successors = ProfileHMM.getPossibleSuccessorIndeces(state, 5, 4, 3);
+//            for(Integer succ : successors) {
+//                expectedTransitionMatrix[state][succ] += pseudoCount;
+//            }
+//            var rowsum = Arrays.stream(expectedTransitionMatrix[state]).sum();
+//            for(int j=0; j<expectedTransitionMatrix[state].length -1; j++) {
+//                expectedTransitionMatrix[state][j] /=  rowsum;
+//            }
+//        }
+
+        var transitionMatrix = profileHmm.getTransitionMatrix();
+
+        assertArrayEquals(expectedTransitionMatrix, transitionMatrix);
+
+    }
+
+
+    @Test
+    public void testTransitionMatrixMultipleConsecutiveNoMatch() {
+        final var pseudoCount = 1;
+
+        var sequences = new ArrayList<FASTASequence>();
+
+        sequences.add(new FASTASequence("1", new char[]{'A', '-', '-', 'C'}));
+        sequences.add(new FASTASequence("2", new char[]{'A', '-', 'A', 'C'}));
+        sequences.add(new FASTASequence("3", new char[]{'-', 'T', 'A', '-'}));
+        sequences.add(new FASTASequence("4", new char[]{'-', 'A', '-', 'C'}));
+        sequences.add(new FASTASequence("5", new char[]{'A', '-', '-', '-'}));
+
+        var observationMap = createObersavtionMap();
+
+        var profileHmm = new ProfileHMM(sequences, '-', observationMap, pseudoCount);
+
+        var expectedTransitionMatrix = new double[][]{
+//                    0 1 2 3 0 1 2 1 2
+/*0*/                {0,3,0,0,0,0,0,2,0},
+/*1*/                {0,0,1,0,0,1,0,0,1},
+/*2*/                {0,0,0,3,0,0,0,0,0},
+/*3*/                {0,0,0,0,0,0,0,0,0},
+/*0*/                {0,0,0,0,0,0,0,0,0},
+/*1*/                {0,0,2,0,0,1,0,0,1},
+/*2*/                {0,0,0,0,0,0,0,0,0},
+/*1*/                {0,0,0,0,0,2,0,0,0},
+/*2*/                {0,0,0,2,0,0,0,0,0},
+        };
+
+//        for(var state=0; state<expectedTransitionMatrix.length-1; state++) {
+//            if (state == 4) {
+//                continue; // no transitions from final match
+//            }
+//            var successors = ProfileHMM.getPossibleSuccessorIndeces(state, 5, 4, 3);
+//            for(Integer succ : successors) {
+//                expectedTransitionMatrix[state][succ] += pseudoCount;
+//            }
+//            var rowsum = Arrays.stream(expectedTransitionMatrix[state]).sum();
+//            for(int j=0; j<expectedTransitionMatrix[state].length -1; j++) {
+//                expectedTransitionMatrix[state][j] /=  rowsum;
+//            }
+//        }
+
+        var transitionMatrix = profileHmm.getTransitionMatrix();
+
+        assertArrayEquals(expectedTransitionMatrix, transitionMatrix);
+
+    }
+
+    @Test
+    public void testTransitionMatrixNoMatchBeginningAndEnding() {
+        final var pseudoCount = 1;
+
+        var sequences = new ArrayList<FASTASequence>();
+
+        sequences.add(new FASTASequence("1", new char[]{'-', '-', '-', 'C'}));
+        sequences.add(new FASTASequence("2", new char[]{'A', 'T', 'A', '-'}));
+        sequences.add(new FASTASequence("3", new char[]{'-', 'T', 'A', '-'}));
+        sequences.add(new FASTASequence("4", new char[]{'-', 'A', 'C', 'C'}));
+        sequences.add(new FASTASequence("5", new char[]{'A', '-', '-', '-'}));
+
+        var observationMap = createObersavtionMap();
+
+        var profileHmm = new ProfileHMM(sequences, '-', observationMap, pseudoCount);
+
+        var expectedTransitionMatrix = new double[][]{
+//                    0 1 2 3 0 1 2 1 2
+/*0*/                {0,2,0,0,2,0,0,1,0},
+/*1*/                {0,0,3,0,0,0,0,0,0},
+/*2*/                {0,0,0,2,0,0,1,0,0},
+/*3*/                {0,0,0,0,0,0,0,0,0},
+/*0*/                {0,1,0,0,0,0,0,1,0},
+/*1*/                {0,0,0,0,0,0,0,0,0},
+/*2*/                {0,0,0,2,0,0,0,0,0},
+/*1*/                {0,0,0,0,0,0,0,0,2},
+/*2*/                {0,0,0,1,0,0,1,0,0},
+        };
+
+//        for(var state=0; state<expectedTransitionMatrix.length-1; state++) {
+//            if (state == 4) {
+//                continue; // no transitions from final match
+//            }
+//            var successors = ProfileHMM.getPossibleSuccessorIndeces(state, 5, 4, 3);
+//            for(Integer succ : successors) {
+//                expectedTransitionMatrix[state][succ] += pseudoCount;
+//            }
+//            var rowsum = Arrays.stream(expectedTransitionMatrix[state]).sum();
+//            for(int j=0; j<expectedTransitionMatrix[state].length -1; j++) {
+//                expectedTransitionMatrix[state][j] /=  rowsum;
+//            }
+//        }
+
+        var transitionMatrix = profileHmm.getTransitionMatrix();
+
+        assertArrayEquals(expectedTransitionMatrix, transitionMatrix);
+
+    }
+
+
+
 
 
 
