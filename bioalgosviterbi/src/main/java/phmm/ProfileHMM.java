@@ -66,7 +66,7 @@ public class ProfileHMM {
                             seq,
                             column,
                             isMatchColumn ? profileColumn - 1 : profileColumn,
-                            isMatchColumn ? previousMatchColumn.orElse(-1) : currentMatchColumn.get(),
+                            isMatchColumn ? previousMatchColumn.orElse(-1) : currentMatchColumn.orElse(-1),
                             gapSymbol, isMatchColumn, matchStatesCount, insertionStatesCount);
 
                     var currState = profileColumn;
@@ -98,13 +98,30 @@ public class ProfileHMM {
                             seq,
                             lastColumn,
                             profileColumn,
-                            currentMatchColumn.get(),
+                            currentMatchColumn.orElse(-1),
                             gapSymbol, isMatchColumn, matchStatesCount, insertionStatesCount);
                 }
                         transitionMatrix[prevState][matchStatesCount-1]++;
             }
         }
 
+        applyPseudcountAndNormalize(transitionMatrix, pseudoCount, matchStatesCount, insertionStatesCount, deletionStatesCount);
+    }
+
+    private static void applyPseudcountAndNormalize(double[][] transitionMatrix, int pseudocount, int matchCount, int insertCount, int deleteCount) {
+        for(var fromState=0; fromState < transitionMatrix.length; fromState++) {
+            for (int toState : getPossibleSuccessorIndeces(fromState, matchCount, insertCount, deleteCount)) {
+                transitionMatrix[fromState][toState] += pseudocount;
+            }
+        }
+        for(var fromState=0; fromState < transitionMatrix.length; fromState++) {
+            var rowSum = Arrays.stream(transitionMatrix[fromState]).sum();
+            if (rowSum == 0)
+                continue;
+            for (var toState=0; toState<transitionMatrix.length; toState++) {
+                transitionMatrix[fromState][toState] /= rowSum;
+            }
+        }
     }
 
     private int getPreviousState(int currProfileColumn, char[] sequence, int index,
@@ -189,28 +206,28 @@ public class ProfileHMM {
     }
 
     public static ArrayList<Integer> getPossibleSuccessorIndeces(int index, int matchCount, int insertCount, int deleteCount) {
-        if (index >= matchCount + insertCount + deleteCount) {
-            throw new IllegalArgumentException("Index can't be greater than matchCount + insertCount + deleteCount");
-        }
         var successors = new ArrayList<Integer>();
-        if (index < matchCount) {
+        if (index >= 0 && index < matchCount-1) { // skipping end match state
             successors.add(index+1); // match state
             successors.add(matchCount+index); // insert state
             // last match and end match state have no transition to delete
             if (index < matchCount-2) {
                 successors.add(matchCount+insertCount+index);
             }
-        } else if (index < matchCount + insertCount) {
+        } else if (index >= matchCount && index < matchCount + insertCount) {
             successors.add(index - matchCount + 1); // match state
             successors.add(index);  // insert
             if (index < matchCount + insertCount - 1) {
                 successors.add(insertCount + index); // delete
             }
-        } else {
-            successors.add(index - insertCount - matchCount + 1);
-            successors.add(index - insertCount +1); // first column has no delete
-            successors.add(index - insertCount - matchCount + 1);
+        } else if (index >= matchCount + insertCount && index < matchCount+insertCount+deleteCount){
+            successors.add(index - insertCount);
+            successors.add(index - insertCount - matchCount +2);
+            if (index < matchCount + insertCount + deleteCount -1) {
+                successors.add(index+1);
+            }
         }
+
         return successors;
     }
 

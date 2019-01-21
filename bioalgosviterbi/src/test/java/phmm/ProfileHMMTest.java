@@ -175,19 +175,19 @@ public class ProfileHMMTest {
 /*3*/                {0,0,0,0,1,0,0,0,0,0,0,0},
         };
 
-//        for(var state=0; state<expectedTransitionMatrix.length-1; state++) {
-//            if (state == 4) {
-//                continue; // no transitions from final match
-//            }
-//            var successors = ProfileHMM.getPossibleSuccessorIndeces(state, 5, 4, 3);
-//            for(Integer succ : successors) {
-//                expectedTransitionMatrix[state][succ] += pseudoCount;
-//            }
-//            var rowsum = Arrays.stream(expectedTransitionMatrix[state]).sum();
-//            for(int j=0; j<expectedTransitionMatrix[state].length -1; j++) {
-//                expectedTransitionMatrix[state][j] /=  rowsum;
-//            }
-//        }
+        for(var state=0; state<expectedTransitionMatrix.length; state++) {
+            if (state == 4) {
+                continue; // no transitions from final match
+            }
+            var successors = ProfileHMM.getPossibleSuccessorIndeces(state, 5, 4, 3);
+            for(int succ : successors) {
+                expectedTransitionMatrix[state][succ] += pseudoCount;
+            }
+            var rowsum = Arrays.stream(expectedTransitionMatrix[state]).sum();
+            for(int j=0; j<expectedTransitionMatrix[state].length; j++) {
+                expectedTransitionMatrix[state][j] /=  rowsum;
+            }
+        }
 
         var transitionMatrix = profileHmm.getTransitionMatrix();
 
@@ -224,19 +224,19 @@ public class ProfileHMMTest {
 /*2*/                {0,0,0,1,0,0,0,0,0},
         };
 
-//        for(var state=0; state<expectedTransitionMatrix.length-1; state++) {
-//            if (state == 4) {
-//                continue; // no transitions from final match
-//            }
-//            var successors = ProfileHMM.getPossibleSuccessorIndeces(state, 5, 4, 3);
-//            for(Integer succ : successors) {
-//                expectedTransitionMatrix[state][succ] += pseudoCount;
-//            }
-//            var rowsum = Arrays.stream(expectedTransitionMatrix[state]).sum();
-//            for(int j=0; j<expectedTransitionMatrix[state].length -1; j++) {
-//                expectedTransitionMatrix[state][j] /=  rowsum;
-//            }
-//        }
+        for(var state=0; state<expectedTransitionMatrix.length; state++) {
+            if (state == 3) {
+                continue; // no transitions from final match
+            }
+            var successors = ProfileHMM.getPossibleSuccessorIndeces(state, 4, 3, 2);
+            for(Integer succ : successors) {
+                expectedTransitionMatrix[state][succ] += pseudoCount;
+            }
+            var rowsum = Arrays.stream(expectedTransitionMatrix[state]).sum();
+            for(int j=0; j<expectedTransitionMatrix[state].length; j++) {
+                expectedTransitionMatrix[state][j] /=  rowsum;
+            }
+        }
 
         var transitionMatrix = profileHmm.getTransitionMatrix();
 
@@ -274,19 +274,19 @@ public class ProfileHMMTest {
 /*2*/                {0,0,0,2,0,0,0,0,0},
         };
 
-//        for(var state=0; state<expectedTransitionMatrix.length-1; state++) {
-//            if (state == 4) {
-//                continue; // no transitions from final match
-//            }
-//            var successors = ProfileHMM.getPossibleSuccessorIndeces(state, 5, 4, 3);
-//            for(Integer succ : successors) {
-//                expectedTransitionMatrix[state][succ] += pseudoCount;
-//            }
-//            var rowsum = Arrays.stream(expectedTransitionMatrix[state]).sum();
-//            for(int j=0; j<expectedTransitionMatrix[state].length -1; j++) {
-//                expectedTransitionMatrix[state][j] /=  rowsum;
-//            }
-//        }
+        for(var state=0; state<expectedTransitionMatrix.length; state++) {
+            if (state == 3) {
+                continue; // no transitions from final match
+            }
+            var successors = ProfileHMM.getPossibleSuccessorIndeces(state, 4, 3, 2);
+            for(Integer succ : successors) {
+                expectedTransitionMatrix[state][succ] += pseudoCount;
+            }
+            var rowsum = Arrays.stream(expectedTransitionMatrix[state]).sum();
+            for(int j=0; j<expectedTransitionMatrix[state].length; j++) {
+                expectedTransitionMatrix[state][j] /=  rowsum;
+            }
+        }
 
         var transitionMatrix = profileHmm.getTransitionMatrix();
 
@@ -323,19 +323,19 @@ public class ProfileHMMTest {
 /*2*/                {0,0,0,1,0,0,1,0,0},
         };
 
-//        for(var state=0; state<expectedTransitionMatrix.length-1; state++) {
-//            if (state == 4) {
-//                continue; // no transitions from final match
-//            }
-//            var successors = ProfileHMM.getPossibleSuccessorIndeces(state, 5, 4, 3);
-//            for(Integer succ : successors) {
-//                expectedTransitionMatrix[state][succ] += pseudoCount;
-//            }
-//            var rowsum = Arrays.stream(expectedTransitionMatrix[state]).sum();
-//            for(int j=0; j<expectedTransitionMatrix[state].length -1; j++) {
-//                expectedTransitionMatrix[state][j] /=  rowsum;
-//            }
-//        }
+        for(var state=0; state<expectedTransitionMatrix.length; state++) {
+            if (state == 3) {
+                continue; // no transitions from final match
+            }
+            var successors = ProfileHMM.getPossibleSuccessorIndeces(state, 4, 3, 2);
+            for(Integer succ : successors) {
+                expectedTransitionMatrix[state][succ] += pseudoCount;
+            }
+            var rowsum = Arrays.stream(expectedTransitionMatrix[state]).sum();
+            for(int j=0; j<expectedTransitionMatrix[state].length; j++) {
+                expectedTransitionMatrix[state][j] /=  rowsum;
+            }
+        }
 
         var transitionMatrix = profileHmm.getTransitionMatrix();
 
