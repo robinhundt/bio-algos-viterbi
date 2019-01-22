@@ -5,152 +5,89 @@ import fasta.FASTASequence;
 import java.util.*;
 
 public class ProfileHMM {
-
     private double[][] transitionMatrix;
-    private double [][] emissionMatrix;
+    private double[][] emissionMatrix;
 
-    public ProfileHMM(ArrayList<FASTASequence> sequences,
-                      Character gapSymbol,
-                      HashMap<Character, Integer> observationMap,
-                      int pseudoCount) {
-        var matchColumns = getMatchColumns(sequences, gapSymbol);
+    final private char gapSymbol;
+    final private int pseudoCount;
+    final private int observationStatesCount;
+    final private int columnCount;
+
+    private int beginMatch;
+    private int endMatch;
+    private int firstInsert;
+    private int lastInsert;
+    private int firstDelete;
+    private int lastDelete;
+
+    private int stateCount;
+
+    private boolean appliedPCAndNormalized = false;
+
+    public ProfileHMM(List<FASTASequence> sequences,
+                      char gapSymbol,
+                      Map<Character, Integer> observationMap,
+                      int pseudocount,
+                      double matchThreshold) {
+        if (sequences.size() == 0 || observationMap.size() == 0) {
+            throw new IllegalArgumentException("Input sequences and observationMap cannot be empty");
+        } else if (pseudocount < 0) {
+            throw new IllegalArgumentException("No negative pseudocounts permitted");
+        }
+
+        this.gapSymbol = gapSymbol;
+        this.pseudoCount = pseudocount;
+        this.observationStatesCount = observationMap.size();
+        this.columnCount = sequences.get(0).getSequence().length;
+
+        var matchColumns = getMatchColumns(sequences, matchThreshold);
+
+        calcStateBorders(matchColumns.size());
+        calcEmissionMatrix(sequences, observationMap, matchColumns.clone());
+        calcTransitionMatrix(sequences, matchColumns);
+    }
+
+    public double[][] getTransitionMatrix() {
+        return transitionMatrix;
+    }
+
+    public double[][] getEmissionMatrix() {
+        return emissionMatrix;
+    }
+
+    private ArrayDeque<Integer> getMatchColumns(List<FASTASequence> sequences, double matchThreshold) {
+        var matchColums = new ArrayDeque<Integer>();
         var columnCount = sequences.get(0).getSequence().length;
 
-        if (matchColumns.size() == 0) {
-            throw new IllegalArgumentException("No match columns!");
-        }
-
-        final var observationStatesCount = observationMap.size();
-        final var matchStatesCount = matchColumns.size() + 2; // add begin and end
-        final var insertionStatesCount = matchColumns.size() + 1;
-        final var deletionStatesCount = matchColumns.size();
-        final var statesCount = matchStatesCount + insertionStatesCount + deletionStatesCount;
-
-        calcEmissionMatrix(sequences, gapSymbol, observationMap, pseudoCount, matchColumns.clone(), columnCount, observationStatesCount, matchStatesCount, insertionStatesCount, deletionStatesCount, statesCount);
-        calcTransitionMatrix(sequences, gapSymbol, observationMap, pseudoCount, matchColumns, columnCount, observationStatesCount, matchStatesCount, insertionStatesCount, deletionStatesCount, statesCount);
-    }
-
-
-    private void calcTransitionMatrix(ArrayList<FASTASequence> sequences, Character gapSymbol, HashMap<Character, Integer> observationMap, int pseudoCount, ArrayDeque<Integer> matchColumns, int columnCount, int observationStatesCount, int matchStatesCount, int insertionStatesCount, int deletionStatesCount, int statesCount) {
-        transitionMatrix = new double[statesCount][statesCount];
-
-        Optional<Integer> previousMatchColumn = Optional.empty();
-        Optional<Integer> currentMatchColumn = Optional.empty();
-        var profileColumn = 0;
-
-
         for (var column=0; column<columnCount; column++) {
-            if (!matchColumns.isEmpty() && column == matchColumns.peek()) {
-                previousMatchColumn = currentMatchColumn;
-                currentMatchColumn = Optional.of(matchColumns.removeFirst());
-                profileColumn++;
-            }
-
-            var isMatchColumn = currentMatchColumn.equals(Optional.of(column));
-
-            for (FASTASequence FASTAseq : sequences) {
-                var seq = FASTAseq.getSequence();
-
-                if (column == 0) {
-                    if (isMatchColumn && seq[column] == gapSymbol) {
-                        transitionMatrix[0][matchStatesCount+insertionStatesCount]++;
-                    } else {
-                        if (isMatchColumn) {
-                            transitionMatrix[0][1]++;
-                        } else if (seq[column] != gapSymbol) {
-                            transitionMatrix[0][matchStatesCount]++;
-                        }
-                    }
-                } else if (isMatchColumn || seq[column] != gapSymbol){
-                    var prevState = getPreviousState(profileColumn,
-                            seq,
-                            column,
-                            isMatchColumn ? profileColumn - 1 : profileColumn,
-                            isMatchColumn ? previousMatchColumn.orElse(-1) : currentMatchColumn.orElse(-1),
-                            gapSymbol, isMatchColumn, matchStatesCount, insertionStatesCount);
-
-                    var currState = profileColumn;
-                    if (isMatchColumn && seq[column] == gapSymbol) {
-                        currState += matchStatesCount + insertionStatesCount -1;
-                    } else if (!isMatchColumn) {
-                        currState += matchStatesCount;
-                    }
-
-                    transitionMatrix[prevState][currState]++;
+            var gapCount = 0;
+            for (FASTASequence seq : sequences) {
+                if (seq.getSequence()[column] == gapSymbol) {
+                    gapCount++;
                 }
-
-
+            }
+            if (gapCount < sequences.size() * matchThreshold) {
+                matchColums.add(column);
             }
         }
-
-        var lastColumn = columnCount-1;
-        var isMatchColumn = currentMatchColumn.equals(Optional.of(lastColumn));
-        // handle transtitions to end state
-        for (var FASTAseq : sequences) {
-            var seq = FASTAseq.getSequence();
-            if (isMatchColumn) {
-                var fromState = seq[lastColumn] == gapSymbol ? statesCount -1 : matchStatesCount -2;
-                transitionMatrix[fromState][matchStatesCount-1]++;
-            } else {
-                int prevState = matchStatesCount+insertionStatesCount-1;
-                if (seq[lastColumn] == gapSymbol) {
-                    prevState = getPreviousState(profileColumn,
-                            seq,
-                            lastColumn,
-                            profileColumn,
-                            currentMatchColumn.orElse(-1),
-                            gapSymbol, isMatchColumn, matchStatesCount, insertionStatesCount);
-                }
-                        transitionMatrix[prevState][matchStatesCount-1]++;
-            }
-        }
-
-        applyPseudcountAndNormalize(transitionMatrix, pseudoCount, matchStatesCount, insertionStatesCount, deletionStatesCount);
+        return matchColums;
     }
 
-    private static void applyPseudcountAndNormalize(double[][] transitionMatrix, int pseudocount, int matchCount, int insertCount, int deleteCount) {
-        for(var fromState=0; fromState < transitionMatrix.length; fromState++) {
-            for (int toState : getPossibleSuccessorIndeces(fromState, matchCount, insertCount, deleteCount)) {
-                transitionMatrix[fromState][toState] += pseudocount;
-            }
-        }
-        for(var fromState=0; fromState < transitionMatrix.length; fromState++) {
-            var rowSum = Arrays.stream(transitionMatrix[fromState]).sum();
-            if (rowSum == 0)
-                continue;
-            for (var toState=0; toState<transitionMatrix.length; toState++) {
-                transitionMatrix[fromState][toState] /= rowSum;
-            }
-        }
+    private void calcStateBorders(int matchStateWithoutBeginningAndEnd) {
+        var matchCount = matchStateWithoutBeginningAndEnd;
+        beginMatch = 0;
+        endMatch = matchCount + 1;
+        firstInsert = endMatch + 1;
+        lastInsert = firstInsert + matchCount;
+        firstDelete = lastInsert + 1;
+        lastDelete = firstDelete + matchCount - 1;
+        stateCount = lastDelete +1;
     }
 
-    private int getPreviousState(int currProfileColumn, char[] sequence, int index,
-                                 int previousMatchState, int previousMatchColumn, char gapSymbol,
-                                 boolean fromMatchState, int matchStatesCount, int insertStatesCount) {
-
-        for (var i=index-1; i>=previousMatchColumn; i--) {
-            if (i == -1) {
-                return 0;
-            } else if (i == previousMatchColumn) {
-                if (sequence[i] == gapSymbol) {
-                    var deleteState = currProfileColumn + matchStatesCount + insertStatesCount - 1;
-                    return fromMatchState ? deleteState -1 : deleteState;
-                } else {
-                    return previousMatchState;
-                }
-            } else {
-                if (sequence[i] == gapSymbol)
-                    continue;
-                var insertState = currProfileColumn + matchStatesCount;
-                return fromMatchState ? insertState - 1 : insertState;
-            }
-        }
-        throw new IllegalArgumentException("Error in previous state.");
-    }
-
-
-    private void calcEmissionMatrix(ArrayList<FASTASequence> sequences, Character gapSymbol, HashMap<Character, Integer> observationMap, int pseudoCount, ArrayDeque<Integer> matchColumns, int columnCount, int observationStatesCount, int matchStatesCount, int insertionStatesCount, int deletionStatesCount, int statesCount) {
-        emissionMatrix = new double[statesCount][observationStatesCount];
+   private void calcEmissionMatrix(List<FASTASequence> sequences,
+                                   Map<Character, Integer> observationMap,
+                                   Deque<Integer> matchColumns) {
+        emissionMatrix = new double[stateCount][observationStatesCount];
 
         Optional<Integer> currentMatchColumn = Optional.empty();
         var profileColumn = 0;
@@ -174,82 +111,162 @@ public class ProfileHMM {
                 if (isMatchColumn) {
                     emissionMatrix[profileColumn][mappedElem]++;
                 } else {
-                    emissionMatrix[matchStatesCount + profileColumn][mappedElem]++;
+                    emissionMatrix[firstInsert + profileColumn][mappedElem]++;
                 }
             }
         }
 
         // skip begin state row
-        for (var i=1; i<matchStatesCount+insertionStatesCount; i++) {
+        for (var i=beginMatch+1; i<firstDelete; i++) {
+            if (i == endMatch)
+                continue;       // end match state has no emissions
             var rowsum = Arrays.stream(emissionMatrix[i]).sum();
+            // -1 is subtracted because observationStatesCount contains the gap symbol
+            // since it's usually not part of the Observations, but keeping it simplifies the Viterbi algorithm
+            // we omit it from the addition of the pseudo counts
             var divisor = rowsum + pseudoCount * (observationStatesCount - 1);
             for(int j=0; j<emissionMatrix[i].length-1; j++) {
                 emissionMatrix[i][j] = (emissionMatrix[i][j] + pseudoCount) / divisor;
             }
         }
-        // end state has no emissions
-        for (var i=0; i < emissionMatrix[matchStatesCount-1].length; i++) {
-            emissionMatrix[matchStatesCount-1][i] = 0;
-        }
 
-        for (var row=statesCount-deletionStatesCount; row<statesCount; row++) {
-            emissionMatrix[row][observationMap.get(gapSymbol)] = 1;
+        for (var deleteState=firstDelete; deleteState<=lastDelete; deleteState++) {
+            emissionMatrix[deleteState][observationMap.get(gapSymbol)] = 1;
         }
     }
 
-    public double[][] getTransitionMatrix() {
-        return transitionMatrix;
-    }
+    private void calcTransitionMatrix(List<FASTASequence> sequences, Deque<Integer> matchColumns) {
+        transitionMatrix = new double[stateCount][stateCount];
 
-    public double[][] getEmissionMatrix() {
-        return emissionMatrix;
-    }
+        Optional<Integer> previousMatchColumn = Optional.empty();
+        Optional<Integer> currentMatchColumn = Optional.empty();
+        var profileColumn = 0;
 
-    public static ArrayList<Integer> getPossibleSuccessorIndeces(int index, int matchCount, int insertCount, int deleteCount) {
-        var successors = new ArrayList<Integer>();
-        if (index >= 0 && index < matchCount-1) { // skipping end match state
-            successors.add(index+1); // match state
-            successors.add(matchCount+index); // insert state
-            // last match and end match state have no transition to delete
-            if (index < matchCount-2) {
-                successors.add(matchCount+insertCount+index);
+
+        for (var column=0; column<columnCount; column++) {
+            if (!matchColumns.isEmpty() && column == matchColumns.peek()) {
+                previousMatchColumn = currentMatchColumn;
+                currentMatchColumn = Optional.of(matchColumns.removeFirst());
+                profileColumn++;
             }
-        } else if (index >= matchCount && index < matchCount + insertCount) {
-            successors.add(index - matchCount + 1); // match state
+            var isMatchColumn = currentMatchColumn.equals(Optional.of(column));
+            for (FASTASequence FASTASeq : sequences) {
+                var seq = FASTASeq.getSequence();
+                if (!isMatchColumn && seq[column] == gapSymbol) {
+                    continue;
+                }
+
+                var prevState = getPreviousState(column,
+                        seq,
+                        isMatchColumn ? previousMatchColumn : currentMatchColumn,
+                        isMatchColumn ? profileColumn - 1 : profileColumn);
+
+                var currState = profileColumn;
+
+                if (!isMatchColumn) {   // we are in an insert state
+                    currState += firstInsert;
+                } else if (seq[column] == gapSymbol) {      // we are in a delete state
+                     currState += firstDelete - 1;      // deletes start in column 1
+                }
+
+                transitionMatrix[prevState][currState]++;
+            }
+        }
+
+        // handle transitions to end state
+        var lastColumn = columnCount -1;
+        for (var FASTASeq : sequences) {
+            var seq = FASTASeq.getSequence();
+            var prevState = getPreviousState(lastColumn + 1,
+                    seq,
+                    currentMatchColumn ,
+                    profileColumn);
+            transitionMatrix[prevState][endMatch]++;
+        }
+
+        applyPseudcountAndNormalizeToTransitionMatrix();
+    }
+
+    private int getPreviousState(int index,
+                                 char[] sequence,
+                                 Optional<Integer> previousMatchColumnFromIndex,
+                                 int prevProfileColumn) {
+        var previousMatchColumn = previousMatchColumnFromIndex.orElse(-1);
+
+        for (var i=index-1; i>=previousMatchColumnFromIndex.orElse(-1); i--) {
+            // if we do not find a previous state from the index given the sequence
+            // then the only one left is the beginning state.
+            // we have to look at all the earlier observations first, because the previous state
+            // could also be the first insert
+            if (i == -1) {
+                return beginMatch;
+            } else if (i == previousMatchColumn) {
+                if (sequence[i] == gapSymbol) {
+                    //first delete is in column 1
+                    return firstDelete + prevProfileColumn -1;
+                } else {
+                    return beginMatch + prevProfileColumn;
+                }
+            } else {
+                if (sequence[i] == gapSymbol)
+                    continue;
+                return firstInsert + prevProfileColumn;
+            }
+        }
+        throw new IllegalArgumentException("Error in previous state.");
+    }
+
+    public ArrayList<Integer> getPossibleSuccessorIndeces(int index) {
+        var successors = new ArrayList<Integer>();
+        if (index < 0 || index > lastDelete) {
+            throw new IllegalArgumentException("Invalid index, must be >= 0, <= lastDelete State");
+        }
+
+        var insertCount = lastInsert - firstInsert + 1;
+
+        if (index < endMatch) { // skipping end match state
+            successors.add(index+1); // match state
+            successors.add(firstInsert+index); // insert state
+            // last match and end match state have no transition to delete
+            if (index < endMatch -1) {
+                successors.add(firstDelete+index);
+            }
+        } else if (index >= firstInsert && index <= lastInsert) {
+            successors.add(index - firstInsert + 1); // match state
             successors.add(index);  // insert
-            if (index < matchCount + insertCount - 1) {
+            if (index < lastInsert) {
                 successors.add(insertCount + index); // delete
             }
-        } else if (index >= matchCount + insertCount && index < matchCount+insertCount+deleteCount){
-            successors.add(index - insertCount);
-            successors.add(index - insertCount - matchCount +2);
-            if (index < matchCount + insertCount + deleteCount -1) {
-                successors.add(index+1);
+        } else if (index >= firstDelete){
+            successors.add(index - lastInsert +1); // match
+            successors.add(index - insertCount); // insert
+            if (index < lastDelete) {
+                successors.add(index+1);    // delete
             }
         }
 
         return successors;
     }
 
-    private ArrayDeque<Integer> getMatchColumns(ArrayList<FASTASequence> sequences, Character gapSymbol) {
-        var matchColums = new ArrayDeque<Integer>();
-        var columnCount = sequences.get(0).getSequence().length;
-
-        for (var column=0; column<columnCount; column++) {
-            var gapCount = 0;
-            for (FASTASequence seq : sequences) {
-                if (seq.getSequence()[column] == gapSymbol) {
-                    gapCount++;
-                }
-            }
-            if (gapCount < sequences.size() / 2.0) {
-                matchColums.add(column);
+    private void applyPseudcountAndNormalizeToTransitionMatrix() {
+        if (this.appliedPCAndNormalized) {
+            throw new IllegalStateException("Can not call applyPseudcountAndNormalizeToTransitionMatrix twice!");
+        }
+        for(var fromState=0; fromState < transitionMatrix.length; fromState++) {
+            for (int toState : getPossibleSuccessorIndeces(fromState)) {
+                transitionMatrix[fromState][toState] += pseudoCount;
             }
         }
-        return matchColums;
+        for(var fromState=0; fromState < transitionMatrix.length; fromState++) {
+            if (fromState == endMatch) // has no transitions
+                continue;
+            var rowSum = Arrays.stream(transitionMatrix[fromState]).sum();
+            for (var toState=0; toState<transitionMatrix.length; toState++) {
+                transitionMatrix[fromState][toState] /= rowSum;
+            }
+        }
     }
 
-    private static Integer getMappedNthSequenceElem(FASTASequence seq,int n, HashMap<Character, Integer> observationMap) {
-        return observationMap.get(seq.getSequence()[n]);
-    }
+
 }
+

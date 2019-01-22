@@ -23,7 +23,7 @@ public class ProfileHMMTest {
 
         var observationMap = createObersavtionMap();
 
-        var profileHmm = new ProfileHMM(sequences, '-', observationMap, 1);
+        var profileHmm = new ProfileHMM(sequences, '-', observationMap, 1, 0.5);
 
         var expectedEmissionMatrix = new double[][]{
                 {0, 0, 0, 0, 0},   // M0
@@ -70,7 +70,7 @@ public class ProfileHMMTest {
 
         var observationMap = createObersavtionMap();
 
-        var profileHmm = new ProfileHMM(sequences, '-', observationMap, 1);
+        var profileHmm = new ProfileHMM(sequences, '-', observationMap, 1, 0.5);
 
         var expectedEmissionMatrix = new double[][]{
                 {0, 0, 0, 0, 0},   // M0
@@ -114,7 +114,7 @@ public class ProfileHMMTest {
 
         var observationMap = createObersavtionMap();
 
-        var profileHmm = new ProfileHMM(sequences, '-', observationMap, 1);
+        var profileHmm = new ProfileHMM(sequences, '-', observationMap, 1, 0.5);
 
         var expectedEmissionMatrix = new double[][]{
                 {0, 0, 0, 0, 0},   // M0
@@ -157,7 +157,7 @@ public class ProfileHMMTest {
 
         var observationMap = createObersavtionMap();
 
-        var profileHmm = new ProfileHMM(sequences, '-', observationMap, pseudoCount);
+        var profileHmm = new ProfileHMM(sequences, '-', observationMap, pseudoCount, 0.5);
 
         var expectedTransitionMatrix = new double[][]{
 //                    0 1 2 3 4 0 1 2 3 1 2 3
@@ -179,7 +179,7 @@ public class ProfileHMMTest {
             if (state == 4) {
                 continue; // no transitions from final match
             }
-            var successors = ProfileHMM.getPossibleSuccessorIndeces(state, 5, 4, 3);
+            var successors = profileHmm.getPossibleSuccessorIndeces(state);
             for(int succ : successors) {
                 expectedTransitionMatrix[state][succ] += pseudoCount;
             }
@@ -209,7 +209,7 @@ public class ProfileHMMTest {
 
         var observationMap = createObersavtionMap();
 
-        var profileHmm = new ProfileHMM(sequences, '-', observationMap, pseudoCount);
+        var profileHmm = new ProfileHMM(sequences, '-', observationMap, pseudoCount, 0.5);
 
         var expectedTransitionMatrix = new double[][]{
 //                    0 1 2 3 0 1 2 1 2
@@ -228,7 +228,7 @@ public class ProfileHMMTest {
             if (state == 3) {
                 continue; // no transitions from final match
             }
-            var successors = ProfileHMM.getPossibleSuccessorIndeces(state, 4, 3, 2);
+            var successors = profileHmm.getPossibleSuccessorIndeces(state);
             for(Integer succ : successors) {
                 expectedTransitionMatrix[state][succ] += pseudoCount;
             }
@@ -259,7 +259,7 @@ public class ProfileHMMTest {
 
         var observationMap = createObersavtionMap();
 
-        var profileHmm = new ProfileHMM(sequences, '-', observationMap, pseudoCount);
+        var profileHmm = new ProfileHMM(sequences, '-', observationMap, pseudoCount, 0.5);
 
         var expectedTransitionMatrix = new double[][]{
 //                    0 1 2 3 0 1 2 1 2
@@ -278,7 +278,7 @@ public class ProfileHMMTest {
             if (state == 3) {
                 continue; // no transitions from final match
             }
-            var successors = ProfileHMM.getPossibleSuccessorIndeces(state, 4, 3, 2);
+            var successors = profileHmm.getPossibleSuccessorIndeces(state);
             for(Integer succ : successors) {
                 expectedTransitionMatrix[state][succ] += pseudoCount;
             }
@@ -308,7 +308,7 @@ public class ProfileHMMTest {
 
         var observationMap = createObersavtionMap();
 
-        var profileHmm = new ProfileHMM(sequences, '-', observationMap, pseudoCount);
+        var profileHmm = new ProfileHMM(sequences, '-', observationMap, pseudoCount, 0.5);
 
         var expectedTransitionMatrix = new double[][]{
 //                    0 1 2 3 0 1 2 1 2
@@ -327,7 +327,7 @@ public class ProfileHMMTest {
             if (state == 3) {
                 continue; // no transitions from final match
             }
-            var successors = ProfileHMM.getPossibleSuccessorIndeces(state, 4, 3, 2);
+            var successors = profileHmm.getPossibleSuccessorIndeces(state);
             for(Integer succ : successors) {
                 expectedTransitionMatrix[state][succ] += pseudoCount;
             }
