@@ -28,6 +28,13 @@ public class App
         }
         try {
             Parameter parameter = parseParameters(args[0]);
+            new File(parameter.getOutputFolder()+"rocCurve").mkdirs();
+            // var outputFolders = parameter.getOutputFolder().split("/");
+            // String folder = outputFolders[0];
+            // for (var i = 1; i<outputFolders.length; i++) {
+            //     new File(folder+"/").mkdirs();
+            //     folder += outputFolders[i];
+            // }
 
             Character gapSymbol = '-';
             HashMap<Character, Integer> observationMap = new HashMap<Character, Integer>(Map.of('A', 0, 'C', 1, 'G', 2, 'U', 3));
@@ -36,11 +43,7 @@ public class App
 
             // create profil HMM with test sequences
             ProfileHMM pHMM = new ProfileHMM(trainingSequences, gapSymbol, observationMap, parameter.getEmissionPseudocounts()/*,parameter.getTransitionPseudocounts()*/,0.5);
-            // double[][] emissionMatrix = pHMM.getEmissionMatrix();
-            // double[][] transitionMatrix = pHMM.getTransitionMatrix();
 
-            // System.out.println(printMatrix(emissionMatrix));
-            // System.out.println(printMatrix(transitionMatrix));
             //get test sequences
             ArrayList<String> testFiles = getFileList(parameter.getTest());
 

@@ -14,7 +14,7 @@ if __name__ == "__main__":
     n, bins, patches = plt.hist(probabilities, density=True, bins=5)
 
     plt.title("Histogram of Viterbi-probabilities")
-    plt.ylabel('Viterbi-Probability')
-    plt.xlabel('Probability')
+    plt.xlabel('Viterbi-Probability')
+    plt.ylabel('Probability')
     plt.grid(True)
     plt.show()
