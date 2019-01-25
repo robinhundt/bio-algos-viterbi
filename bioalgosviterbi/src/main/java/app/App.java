@@ -30,21 +30,21 @@ public class App
             Parameter parameter = parseParameters(args[0]);
 
             Character gapSymbol = '-';
-            HashMap<Character, Integer> observationMap = new HashMap<Character, Integer>(Map.of('A', 0, 'C', 1, 'G', 2, 'U', 3, gapSymbol, 4));
+            HashMap<Character, Integer> observationMap = new HashMap<Character, Integer>(Map.of('A', 0, 'C', 1, 'G', 2, 'U', 3));
             // import training sequences
             var trainingSequences = FASTAParser.parse(Paths.get(parameter.getTraining()));
 
             // create profil HMM with test sequences
             ProfileHMM pHMM = new ProfileHMM(trainingSequences, gapSymbol, observationMap, parameter.getEmissionPseudocounts()/*,parameter.getTransitionPseudocounts()*/,0.5);
-            double[][] emissionMatrix = pHMM.getEmissionMatrix();
-            double[][] transitionMatrix = pHMM.getTransitionMatrix();
+            // double[][] emissionMatrix = pHMM.getEmissionMatrix();
+            // double[][] transitionMatrix = pHMM.getTransitionMatrix();
 
             // System.out.println(printMatrix(emissionMatrix));
             // System.out.println(printMatrix(transitionMatrix));
             //get test sequences
             ArrayList<String> testFiles = getFileList(parameter.getTest());
 
-            runVitberiOnTestFiles(parameter, observationMap, testFiles, transitionMatrix, emissionMatrix);
+            runVitberiOnTestFiles(parameter, observationMap, testFiles, pHMM);
 
             // create roc curve
             if (parameter.isRocCurve()) {
@@ -134,22 +134,21 @@ public class App
     }
 
     private static void runVitberiOnTestFiles(Parameter parameter, HashMap<Character, Integer> observationMap,
-            ArrayList<String> testFiles, double[][] transitionMatrix, double[][] emissionMatrix) throws IOException {
+            ArrayList<String> testFiles, ProfileHMM pHMM) throws IOException {
 
         for (var testFile : testFiles) {
             var sequences = FASTAParser.parse(Paths.get(testFile));
             ArrayList<ViterbiResult> vitProbabilities = new ArrayList<ViterbiResult>(testFile.length());
 
-            Random random = new Random();
+            // Random random = new Random();
             for (var sequence : sequences) {
                 int[] observations = sequence.parseBasesToInt(observationMap);
           
                 // calculate viterbi path and probability
                 
-                // ViterbiResult viterbiResult = Viterbi.calc(observations, transitionMatrix, emissionMatrix);
-                int[] path = {1,2,0,1,0,0,1,1,0};
-                double maxProbability = random.nextDouble();
-                ViterbiResult viterbiResult = new ViterbiResult(path, maxProbability);
+                ViterbiResult viterbiResult = Viterbi.calc(observations, pHMM.getTransitionMatrix(), pHMM.getEmissionMatrix());
+                // int[] path = {1,2,0,1,0,0,1,1,0};
+                // double maxProbability = random.nextDouble();
                 vitProbabilities.add(viterbiResult);
             }
             // create new file and store each probability in one line
