@@ -1,6 +1,6 @@
 package scores;
 
-public class LabeledScore {
+public class LabeledScore implements Comparable {
     private final double score;
     private final boolean label;
 
@@ -26,5 +26,20 @@ public class LabeledScore {
      */
     public boolean isLabel() {
         return label;
+    }
+
+    @Override
+    public int compareTo(Object o) {
+        if (o instanceof LabeledScore) {
+            int comp = 0;
+            if (this.score > ((LabeledScore) o).score) {
+                comp = 1;
+            } else if (this.score < ((LabeledScore) o).score) {
+                comp = -1;
+            }
+            return comp;
+        } else {
+            throw new ClassCastException();
+        }
     }
 }

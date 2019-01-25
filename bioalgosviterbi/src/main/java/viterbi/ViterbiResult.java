@@ -13,7 +13,7 @@ public class ViterbiResult {
 
     @Override
     public String toString(){
-        return Arrays.toString(this.viterbiPath) + "\nMaximal probability: " + maxProbability;
+        return Arrays.toString(this.viterbiPath) + ";" + maxProbability;
     }
 
     public int[] getViterbiPath() {

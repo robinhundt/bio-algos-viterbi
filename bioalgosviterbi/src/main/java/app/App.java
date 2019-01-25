@@ -55,32 +55,41 @@ public class App
         }
     }
 
-    private static String printMatrix(double[][] matrix) {
-        StringBuilder stringBuilder = new StringBuilder();
-        for (var i = 0; i<matrix.length; i++) {
-            for (var j = 0; j<matrix[0].length; j++) {
-                stringBuilder.append(matrix[i][j]);
-            }
-            stringBuilder.append('\n');
-        }
-        return stringBuilder.toString();
-    }
-
     private static void rocCurve(Parameter parameter) {
         ArrayList<String> resultFiles = getFileList(parameter.getOutputFolder());
         try {
-            PriorityQueue<LabeledScore> labeledScores = getLabeledScores(resultFiles);
-            int nrPositives = 0; // ?
-            int nrNegatives = 0; // ?
+            
+            Scanner reader = new Scanner(System.in);
+            PriorityQueue<LabeledScore> allLabeledScores = new PriorityQueue<LabeledScore>();
+            
+            int nrPositives = 0;
+            int nrNegatives = 0;
+            
             int countTruePositives = 0;
             int countFalsePositives = 0;
             ArrayList<Double> truePositiveRate = new ArrayList<Double>();
             ArrayList<Double> falsePositiveRate = new ArrayList<Double>();
             double fPrev = Double.MAX_VALUE;
             
-            for (var score : labeledScores) {
+            // get scores and labels for each file and store them in ascending order
+            for (var filename : resultFiles) {
+                System.out.println("Label for file:\n" + filename);
+                var label = Boolean.parseBoolean(reader.next());
+
+                PriorityQueue<LabeledScore> labeledScore = getLabeledScores(filename, label);
+                
+                if (label) {
+                    nrPositives += labeledScore.size();
+                } else {
+                    nrNegatives += labeledScore.size();
+                }
+                allLabeledScores.addAll(labeledScore);
+            }
+            
+            
+            while (!allLabeledScores.isEmpty()) {
+                var score = allLabeledScores.poll();
                 if (score.getScore() != fPrev) {
-                    System.out.println(score.getScore());
                     truePositiveRate.add(countTruePositives/((double) nrPositives));
                     falsePositiveRate.add(countFalsePositives/((double) nrNegatives));
                     fPrev = score.getScore();
@@ -93,36 +102,35 @@ public class App
                     countFalsePositives++;
                 }
             }
-            System.out.println(truePositiveRate.toString());
+            System.out.println(truePositiveRate);
 
             // write TPR and FPR to file and create roc curve and AUC value with python
             List<String> lines = Arrays.asList(truePositiveRate.toString(), falsePositiveRate.toString());
-            Path path = Paths.get(parameter.getOutputFolder() + "rocCurve/" + "rocCurveData.txt");
-            File rates = new File(path.toString());
+            File rates = new File(parameter.getOutputFolder() + "rocCurve/" + "rocCurveData.txt");
             rates.createNewFile();
-            Files.write(path, lines, Charset.forName("UTF-8"));
+            Files.write(Paths.get(rates.getAbsolutePath()), lines, Charset.forName("UTF-8"));
+
+            reader.close();
 
         } catch (Exception e) {
             System.out.println(e);
         }
     }
 
-    private static PriorityQueue<LabeledScore> getLabeledScores(ArrayList<String> resultFiles)
+    private static PriorityQueue<LabeledScore> getLabeledScores(String resultFile, boolean label)
             throws IOException {
-        PriorityQueue<LabeledScore> allLabeledScores = new PriorityQueue<LabeledScore>();
-        for (var filename : resultFiles) {
-            // ask user for label
-            PriorityQueue<LabeledScore> labeledScores = new PriorityQueue<LabeledScore>();
-            // HashMap<Double, Boolean> labeledScores = new HashMap<Double, Boolean>();
-            Path path = Paths.get(filename);
-            List<String> lines = Files.readAllLines(path);
-            for (var line : lines) {
-                LabeledScore score = new LabeledScore(Double.parseDouble(line), true);
-                labeledScores.add(score);
-            }
-            allLabeledScores.addAll(labeledScores);
+
+        PriorityQueue<LabeledScore> labeledScores = new PriorityQueue<LabeledScore>();
+        Path path = Paths.get(resultFile);
+        
+        List<String> lines = Files.readAllLines(path);
+        for (var line : lines) {
+            // line looks like: viterbiPath;maxProbability
+            LabeledScore score = new LabeledScore(Double.parseDouble(line.split(";")[1]), label);
+            labeledScores.add(score);
         }
-        return allLabeledScores;
+
+        return labeledScores;
     }
 
     private static void runVitberiOnTestFiles(Parameter parameter, HashMap<Character, Integer> observationMap,
@@ -130,7 +138,7 @@ public class App
 
         for (var testFile : testFiles) {
             var sequences = FASTAParser.parse(Paths.get(testFile));
-            ArrayList<String> vitProbabilities = new ArrayList<String>(testFile.length());
+            ArrayList<ViterbiResult> vitProbabilities = new ArrayList<ViterbiResult>(testFile.length());
 
             Random random = new Random();
             for (var sequence : sequences) {
@@ -142,11 +150,14 @@ public class App
                 int[] path = {1,2,0,1,0,0,1,1,0};
                 double maxProbability = random.nextDouble();
                 ViterbiResult viterbiResult = new ViterbiResult(path, maxProbability);
-                vitProbabilities.add(String.valueOf(viterbiResult.getMaxProbability()));
+                vitProbabilities.add(viterbiResult);
             }
             // create new file and store each probability in one line
 
-            List<String> lines =  vitProbabilities;
+            List<String> lines = new ArrayList<String>();
+            for (var vitProbability : vitProbabilities) {
+                lines.add(vitProbability.toString());
+            }
             String[] file = testFile.split("/");
             String filename = file[file.length - 1];
             File results = new File(parameter.getOutputFolder() + "probabilities-" + filename);

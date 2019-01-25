@@ -12,9 +12,9 @@ if __name__ == "__main__":
     lines = dataFile.readlines()
 
     TPR = lines[0][1:len(lines[0])-2].split(',')
-    TPR = [int(x) for x in TPR]
+    TPR = [float(x) for x in TPR]
     FPR = lines[1][1:len(lines[1])-2].split(',')
-    FPR = [int(x) for x in FPR]
+    FPR = [float(x) for x in FPR]
 
     auc = np.trapz(TPR, FPR)
 
