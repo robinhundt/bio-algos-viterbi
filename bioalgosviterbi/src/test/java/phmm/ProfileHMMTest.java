@@ -26,30 +26,26 @@ public class ProfileHMMTest {
         var profileHmm = new ProfileHMM(sequences, '-', observationMap, 1, 0.5);
 
         var expectedEmissionMatrix = new double[][]{
-                {0, 0, 0, 0, 0},   // M0
-                {4, 0, 0, 0, 0},
-                {0, 0, 3, 0, 0},
-                {2, 0, 1, 0, 0},
-                {0, 4, 0, 0, 0},
-                {0, 0, 0, 0, 0},   // M5
-                {0, 0, 0, 0, 0},   // I0
-                {0, 0, 0, 0, 0},
-                {2, 0, 0, 0, 0},
-                {2, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},   // I4
-                {0, 0, 0, 0, 1},   // D0
-                {0, 0, 0, 0, 1},
-                {0, 0, 0, 0, 1},
-                {0, 0, 0, 0, 1},   // D3
+                {0, 0, 0, 0},   // M0
+                {4, 0, 0, 0},
+                {0, 0, 3, 0},
+                {2, 0, 1, 0},
+                {0, 4, 0, 0},
+                {0, 0, 0, 0},   // M5
+                {0, 0, 0, 0},   // I0
+                {0, 0, 0, 0},
+                {2, 0, 0, 0},
+                {2, 0, 0, 0},
+                {0, 0, 0, 0}   // I4
         };
 
         //skip first and last match state, also delete states
-        for (var i=1; i<expectedEmissionMatrix.length - 4; i++) {
+        for (var i=1; i<expectedEmissionMatrix.length; i++) {
             if (i==5)
                 continue;
             var rowsum = Arrays.stream(expectedEmissionMatrix[i]).sum();
             var divisor = rowsum + 4; // add pseudocount
-            for(int j=0; j<expectedEmissionMatrix[i].length -1; j++) {
+            for(int j=0; j<expectedEmissionMatrix[i].length; j++) {
                 expectedEmissionMatrix[i][j] = (expectedEmissionMatrix[i][j] + 1) / divisor;
             }
         }
@@ -73,27 +69,24 @@ public class ProfileHMMTest {
         var profileHmm = new ProfileHMM(sequences, '-', observationMap, 1, 0.5);
 
         var expectedEmissionMatrix = new double[][]{
-                {0, 0, 0, 0, 0},   // M0
-                {0, 0, 3, 0, 0},
-                {2, 0, 1, 0, 0},
-                {0, 4, 0, 0, 0},
-                {0, 0, 0, 0, 0},   // M4
-                {2, 0, 0, 0, 0},   // I0
-                {2, 0, 0, 0, 0},
-                {2, 0, 0, 0, 0},
-                {0, 0, 0, 0, 0},   // I3
-                {0, 0, 0, 0, 1},   // D0
-                {0, 0, 0, 0, 1},
-                {0, 0, 0, 0, 1},   // D2
+                {0, 0, 0, 0},   // M0
+                {0, 0, 3, 0},
+                {2, 0, 1, 0},
+                {0, 4, 0, 0},
+                {0, 0, 0, 0},   // M4
+                {2, 0, 0, 0},   // I0
+                {2, 0, 0, 0},
+                {2, 0, 0, 0},
+                {0, 0, 0, 0}   // I3
         };
 
         //skip first and last match state, also delete states
-        for (var i=1; i<expectedEmissionMatrix.length - 3; i++) {
+        for (var i=1; i<expectedEmissionMatrix.length; i++) {
             if (i==4)
                 continue;
             var rowsum = Arrays.stream(expectedEmissionMatrix[i]).sum();
             var divisor = rowsum + 4; // add pseudocount
-            for(int j=0; j<expectedEmissionMatrix[i].length -1; j++) {
+            for(int j=0; j<expectedEmissionMatrix[i].length; j++) {
                 expectedEmissionMatrix[i][j] = (expectedEmissionMatrix[i][j] + 1) / divisor;
             }
         }
@@ -117,24 +110,22 @@ public class ProfileHMMTest {
         var profileHmm = new ProfileHMM(sequences, '-', observationMap, 1, 0.5);
 
         var expectedEmissionMatrix = new double[][]{
-                {0, 0, 0, 0, 0},   // M0
-                {0, 0, 3, 0, 0},
-                {2, 0, 1, 0, 0},
-                {0, 0, 0, 0, 0},   // M4
-                {2, 0, 0, 0, 0},   // I0
-                {2, 0, 0, 0, 0},
-                {2, 2, 0, 0, 0},   // I4
-                {0, 0, 0, 0, 1},   // D0
-                {0, 0, 0, 0, 1},   // D1
+                {0, 0, 0, 0},   // M0
+                {0, 0, 3, 0},
+                {2, 0, 1, 0},
+                {0, 0, 0, 0},   // M4
+                {2, 0, 0, 0},   // I0
+                {2, 0, 0, 0},
+                {2, 2, 0, 0}    // I4
         };
 
         //skip first and last match state, also delete states
-        for (var i=1; i<expectedEmissionMatrix.length - 2; i++) {
+        for (var i=1; i<expectedEmissionMatrix.length; i++) {
             if (i==3)
                 continue;
             var rowsum = Arrays.stream(expectedEmissionMatrix[i]).sum();
             var divisor = rowsum + 4; // add pseudocount
-            for(int j=0; j<expectedEmissionMatrix[i].length -1; j++) {
+            for(int j=0; j<expectedEmissionMatrix[i].length; j++) {
                 expectedEmissionMatrix[i][j] = (expectedEmissionMatrix[i][j] + 1) / divisor;
             }
         }
@@ -355,7 +346,6 @@ public class ProfileHMMTest {
         observationMap.put('C', 1);
         observationMap.put('G', 2);
         observationMap.put('T', 3);
-        observationMap.put('-', 4);
         return observationMap;
     }
 
