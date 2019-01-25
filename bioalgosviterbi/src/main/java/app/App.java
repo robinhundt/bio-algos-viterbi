@@ -146,7 +146,7 @@ public class App
           
                 // calculate viterbi path and probability
                 
-                ViterbiResult viterbiResult = Viterbi.calc(observations, pHMM.getTransitionMatrix(), pHMM.getEmissionMatrix());
+                ViterbiResult viterbiResult = Viterbi.calc(observations, pHMM);
                 // int[] path = {1,2,0,1,0,0,1,1,0};
                 // double maxProbability = random.nextDouble();
                 vitProbabilities.add(viterbiResult);
