@@ -33,6 +33,8 @@ public class ProfileHMM {
             throw new IllegalArgumentException("Input sequences and observationMap cannot be empty");
         } else if (pseudocount < 0) {
             throw new IllegalArgumentException("No negative pseudocounts permitted");
+        } else if (observationMap.containsKey(gapSymbol)) {
+            throw new IllegalArgumentException("Obersvation map cannot contain gap symbol");
         }
 
         this.gapSymbol = gapSymbol;
@@ -53,6 +55,94 @@ public class ProfileHMM {
 
     public double[][] getEmissionMatrix() {
         return emissionMatrix;
+    }
+
+    public int getBeginMatch() {
+        return beginMatch;
+    }
+
+    public int getEndMatch() {
+        return endMatch;
+    }
+
+    public int getFirstInsert() {
+        return firstInsert;
+    }
+
+    public int getLastInsert() {
+        return lastInsert;
+    }
+
+    public int getFirstDelete() {
+        return firstDelete;
+    }
+
+    public int getLastDelete() {
+        return lastDelete;
+    }
+
+    public int getStateCount() {
+        return stateCount;
+    }
+
+    public List<Integer> getPossibleSuccessorIndeces(int index) {
+        var successors = new ArrayList<Integer>();
+        if (index < 0 || index > lastDelete) {
+            throw new IllegalArgumentException("Invalid index, must be >= 0, <= lastDelete State");
+        }
+
+        var insertCount = lastInsert - firstInsert + 1;
+
+        if (index < endMatch) { // skipping end match state
+            successors.add(index+1); // match state
+            successors.add(firstInsert+index); // insert state
+            // last match and end match state have no transition to delete
+            if (index < endMatch -1) {
+                successors.add(firstDelete+index);
+            }
+        } else if (index >= firstInsert && index <= lastInsert) {
+            successors.add(index - firstInsert + 1); // match state
+            successors.add(index);  // insert
+            if (index < lastInsert) {
+                successors.add(insertCount + index); // delete
+            }
+        } else if (index >= firstDelete){
+            successors.add(index - lastInsert +1); // match
+            successors.add(index - insertCount); // insert
+            if (index < lastDelete) {
+                successors.add(index+1);    // delete
+            }
+        }
+
+        return successors;
+    }
+
+    public List<Integer> getPossiblePredecessorIndeces(int index) {
+        if (index < 0 || index > lastDelete) {
+            throw new IllegalArgumentException("No predecessor states for out of range index");
+        }
+        var predecessors = new ArrayList<Integer>();
+        if (index > beginMatch && index <= endMatch) {
+            predecessors.add(index-1);      // prev match
+            predecessors.add(firstInsert + index -1);   // prev insert
+            if (index > beginMatch+1) {
+                predecessors.add(firstDelete + index -2);
+            }
+        } else if (index <= lastInsert) {
+            predecessors.add(firstInsert - index);     //prev match
+            predecessors.add(index);        // prev inser
+            if (index > firstInsert) {
+                predecessors.add(index - firstInsert + firstDelete -1);
+            }
+        } else {
+            predecessors.add(index - firstDelete);  // prev match
+            predecessors.add(index - firstDelete + firstInsert);    // prev insert
+            if (index > firstDelete) {
+                predecessors.add(index - 1);
+            }
+        }
+
+        return predecessors;
     }
 
     private ArrayDeque<Integer> getMatchColumns(List<FASTASequence> sequences, double matchThreshold) {
@@ -87,7 +177,8 @@ public class ProfileHMM {
    private void calcEmissionMatrix(List<FASTASequence> sequences,
                                    Map<Character, Integer> observationMap,
                                    Deque<Integer> matchColumns) {
-        emissionMatrix = new double[stateCount][observationStatesCount];
+        // deletes have no emissions
+        emissionMatrix = new double[lastInsert + 1][observationStatesCount];
 
         Optional<Integer> currentMatchColumn = Optional.empty();
         var profileColumn = 0;
@@ -117,21 +208,14 @@ public class ProfileHMM {
         }
 
         // skip begin state row
-        for (var i=beginMatch+1; i<firstDelete; i++) {
+        for (var i=1; i<emissionMatrix.length; i++) {
             if (i == endMatch)
                 continue;       // end match state has no emissions
             var rowsum = Arrays.stream(emissionMatrix[i]).sum();
-            // -1 is subtracted because observationStatesCount contains the gap symbol
-            // since it's usually not part of the Observations, but keeping it simplifies the Viterbi algorithm
-            // we omit it from the addition of the pseudo counts
-            var divisor = rowsum + pseudoCount * (observationStatesCount - 1);
-            for(int j=0; j<emissionMatrix[i].length-1; j++) {
+            var divisor = rowsum + pseudoCount * observationStatesCount;
+            for(int j=0; j<emissionMatrix[i].length; j++) {
                 emissionMatrix[i][j] = (emissionMatrix[i][j] + pseudoCount) / divisor;
             }
-        }
-
-        for (var deleteState=firstDelete; deleteState<=lastDelete; deleteState++) {
-            emissionMatrix[deleteState][observationMap.get(gapSymbol)] = 1;
         }
     }
 
@@ -214,38 +298,6 @@ public class ProfileHMM {
             }
         }
         throw new IllegalArgumentException("Error in previous state.");
-    }
-
-    public ArrayList<Integer> getPossibleSuccessorIndeces(int index) {
-        var successors = new ArrayList<Integer>();
-        if (index < 0 || index > lastDelete) {
-            throw new IllegalArgumentException("Invalid index, must be >= 0, <= lastDelete State");
-        }
-
-        var insertCount = lastInsert - firstInsert + 1;
-
-        if (index < endMatch) { // skipping end match state
-            successors.add(index+1); // match state
-            successors.add(firstInsert+index); // insert state
-            // last match and end match state have no transition to delete
-            if (index < endMatch -1) {
-                successors.add(firstDelete+index);
-            }
-        } else if (index >= firstInsert && index <= lastInsert) {
-            successors.add(index - firstInsert + 1); // match state
-            successors.add(index);  // insert
-            if (index < lastInsert) {
-                successors.add(insertCount + index); // delete
-            }
-        } else if (index >= firstDelete){
-            successors.add(index - lastInsert +1); // match
-            successors.add(index - insertCount); // insert
-            if (index < lastDelete) {
-                successors.add(index+1);    // delete
-            }
-        }
-
-        return successors;
     }
 
     private void applyPseudcountAndNormalizeToTransitionMatrix() {
