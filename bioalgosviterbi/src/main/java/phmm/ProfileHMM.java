@@ -129,7 +129,7 @@ public class ProfileHMM {
                 predecessors.add(firstDelete + index -2);
             }
         } else if (index <= lastInsert) {
-            predecessors.add(firstInsert - index);     //prev match
+            predecessors.add(index - firstInsert);     //prev match
             predecessors.add(index);        // prev inser
             if (index > firstInsert) {
                 predecessors.add(index - firstInsert + firstDelete -1);

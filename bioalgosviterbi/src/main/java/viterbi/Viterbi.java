@@ -115,17 +115,17 @@ public class Viterbi {
                 var predecessorStates = profileHMM.getPossiblePredecessorIndeces(state);
                 var compoundProbabilities = new ArrayList<Map.Entry<Integer, Double>>();
                 for (int predecessor : predecessorStates) {
-                    if (predecessor <= profileHMM.getLastInsert()) {
+                    if (state <= profileHMM.getLastInsert()) {
                         var entry = new AbstractMap.SimpleEntry<>(
                                 predecessor,
-                                logEmissionMatrix[state][observationIdx] +
+                                logEmissionMatrix[state][observations[observationIdx]] +
                                         viterbiVar[predecessor][viterbiIdx - 1] +
                                         logTransitionMatrix[predecessor][state]
                         );
                         compoundProbabilities.add(entry);
                         entry = new AbstractMap.SimpleEntry<>(
                                 predecessor,
-                                logEmissionMatrix[state][observationIdx] +
+                                logEmissionMatrix[state][observations[observationIdx]] +
                                         viterbiVar[predecessor][viterbiIdx - 1] +
                                         logTransitionMatrix[predecessor][state]
                         );
@@ -149,11 +149,11 @@ public class Viterbi {
         var predecessorsToEndState = profileHMM.getPossiblePredecessorIndeces(profileHMM.getEndMatch());
         ArrayList<Map.Entry<Integer, Double>> lastColumnValsAndPredStates = predecessorsToEndState
                 .stream()
-                .map(state -> new AbstractMap.SimpleEntry<>(state, viterbiVar[state][viterbiVar.length-1] + logTransitionMatrix[state][profileHMM.getEndMatch()]))
+                .map(state -> new AbstractMap.SimpleEntry<>(state, viterbiVar[state][viterbiVar[0].length-2] + logTransitionMatrix[state][profileHMM.getEndMatch()]))
                 .collect(Collectors.toCollection(ArrayList::new));
         var argMaxAndMax = getMaxAndArgMax(lastColumnValsAndPredStates);
-        viterbiVar[profileHMM.getEndMatch()][viterbiVar.length - 1] = argMaxAndMax.getValue();
-        backtrackVars[profileHMM.getEndMatch()][backtrackVars.length - 1] = argMaxAndMax.getKey();
+        viterbiVar[profileHMM.getEndMatch()][viterbiVar[0].length - 1] = argMaxAndMax.getValue();
+        backtrackVars[profileHMM.getEndMatch()][backtrackVars[0].length - 1] = argMaxAndMax.getKey();
         return argMaxAndMax.getValue();
     }
 
