@@ -1,9 +1,9 @@
 //this is a comment
 //do not change anything before the colon, just adjust the setting value
 trainingData:../data/train/LSU_train.fasta
-testData:../data/test/
+testData:../data/test/LSU_test_1.fasta
 outputFolder:target/viterbiData/
 backgroundFile:
 emissionPseudocounts:1
 transitionPseudocounts:1
-rocCurve:true
+rocCurve:false
