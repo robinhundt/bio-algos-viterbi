@@ -1,12 +1,12 @@
 package viterbi;
 
 import phmm.ProfileHMM;
+import util.Util;
 
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static util.Util.*;
 
 public class Viterbi {
     /**
@@ -28,14 +28,14 @@ public class Viterbi {
         int[][] backtrackingVar = new int[countStateSpace][observations.length + 1];
 
         viterbiVar[0][0] = 1;
-        
+
         /*
             Logarithm is applied element wise to the transition and emission matrices. Computing the logithms of
             the probabilities instead of the probabilities themselves ensures that the values stay in ranges which
             can be represented by doubles.
          */
-        double[][] logTransitionMatrix = Viterbi.toLog(transitionMatrix.clone());
-        double[][] logEmissionMatrix = Viterbi.toLog(emissionMatrix.clone());
+        double[][] logTransitionMatrix = toLog(transitionMatrix.clone());
+        double[][] logEmissionMatrix = toLog(emissionMatrix.clone());
 
         double maxProbability = calcViterbiBacktrackVars(observations, countStateSpace, viterbiVar, backtrackingVar, logTransitionMatrix, logEmissionMatrix);
 
@@ -92,21 +92,24 @@ public class Viterbi {
 
         viterbiVar[0][0] = 1;
 
+        toLog(viterbiVar);
+
+
         /*
             Logarithm is applied element wise to the transition and emission matrices. Computing the logithms of
             the probabilities instead of the probabilities themselves ensures that the values stay in ranges which
             can be represented by doubles.
          */
-        double[][] logTransitionMatrix = Viterbi.toLog(transitionMatrix.clone());
-        double[][] logEmissionMatrix = Viterbi.toLog(emissionMatrix.clone());
 
-        double maxProbability = calcViterbiVars(observations, profileHMM, viterbiVar, backtrackingVar, logTransitionMatrix, logEmissionMatrix);
-        var path = reconstructOptimalPath(observations.length, profileHMM, viterbiVar, backtrackingVar);
+        double maxProbability = calcViterbiVars(observations, profileHMM, viterbiVar, backtrackingVar);
+        var path = reconstructOptimalPath(observations.length, profileHMM, backtrackingVar);
         return new ViterbiResult(path, maxProbability);
     }
 
 
-    private static double calcViterbiVars(int[] observations, ProfileHMM profileHMM, double[][] viterbiVar, int[][] backtrackVars, double[][] logTransitionMatrix, double[][] logEmissionMatrix) {
+    private static double calcViterbiVars(int[] observations, ProfileHMM profileHMM, double[][] viterbiVar, int[][] backtrackVars) {
+        var logTransitionMatrix = profileHMM.getTransitionMatrix();
+        var logEmissionMatrix = profileHMM.getEmissionMatrix();
         var countStateSpace = logTransitionMatrix.length;
         for (int observationIdx = 0; observationIdx < observations.length; observationIdx++) {
             // we begin at column 1;
@@ -117,13 +120,6 @@ public class Viterbi {
                 for (int predecessor : predecessorStates) {
                     if (state <= profileHMM.getLastInsert()) {
                         var entry = new AbstractMap.SimpleEntry<>(
-                                predecessor,
-                                logEmissionMatrix[state][observations[observationIdx]] +
-                                        viterbiVar[predecessor][viterbiIdx - 1] +
-                                        logTransitionMatrix[predecessor][state]
-                        );
-                        compoundProbabilities.add(entry);
-                        entry = new AbstractMap.SimpleEntry<>(
                                 predecessor,
                                 logEmissionMatrix[state][observations[observationIdx]] +
                                         viterbiVar[predecessor][viterbiIdx - 1] +
@@ -157,29 +153,25 @@ public class Viterbi {
         return argMaxAndMax.getValue();
     }
 
-    private static int[] reconstructOptimalPath(int observationCount, ProfileHMM profileHMM, double[][] viterbiVars, int[][] backtrackingVar) {
-        var path = new int[observationCount + 2]; // for end and begin state
-        path[path.length-1] = profileHMM.getEndMatch();
+    private static int[] reconstructOptimalPath(int observationCount, ProfileHMM profileHMM, int[][] backtrackingVar) {
+        var revPath = new ArrayList<Integer>();
+        revPath.add(profileHMM.getEndMatch());
 
-        for (int observation = observationCount-1; observation >= -1; observation--) {
-            path[observation+1] = backtrackingVar[path[observation+2]][observation + 2];
-        }
-        return path;
-    }
+        var observation = observationCount + 1;
 
-    /**
-     * Transforms the provided matrix by an element wise natural logarithm in place.
-     *
-     * @param matrix 2d matrix that should be transformed.
-     * @return the transformed matrix.
-     */
-    private static double[][] toLog(double[][] matrix) {
-        for (int i = 0; i < matrix.length; i++) {
-            for (int j = 0; j < matrix[0].length; j++) {
-                matrix[i][j] = Math.log(matrix[i][j]);
+        while (observation > 0) {
+            var prevState = backtrackingVar[revPath.get(revPath.size() -1)][observation];
+            revPath.add(prevState);
+            if (prevState <= profileHMM.getLastInsert() || observation == observationCount + 1) {
+                observation--;
             }
         }
-        return matrix;
+
+        var returnPath = new int[revPath.size()];
+        for (var i=0; i<returnPath.length; i++) {
+            returnPath[i] = revPath.get(revPath.size() - i - 1);
+        }
+        return returnPath;
     }
 
     private static Map.Entry<Integer, Double> getMaxAndArgMax(List<Map.Entry<Integer, Double>> input) {

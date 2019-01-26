@@ -1,6 +1,7 @@
 package phmm;
 
 import fasta.FASTASequence;
+import util.Util;
 
 import java.util.*;
 
@@ -9,7 +10,7 @@ public class ProfileHMM {
     private double[][] emissionMatrix;
 
     final private char gapSymbol;
-    final private int pseudoCount;
+    final private double pseudoCount;
     final private int observationStatesCount;
     final private int columnCount;
 
@@ -27,7 +28,7 @@ public class ProfileHMM {
     public ProfileHMM(List<FASTASequence> sequences,
                       char gapSymbol,
                       Map<Character, Integer> observationMap,
-                      int pseudocount,
+                      double pseudocount,
                       double matchThreshold) {
         if (sequences.size() == 0 || observationMap.size() == 0) {
             throw new IllegalArgumentException("Input sequences and observationMap cannot be empty");
@@ -47,6 +48,9 @@ public class ProfileHMM {
         calcStateBorders(matchColumns.size());
         calcEmissionMatrix(sequences, observationMap, matchColumns.clone());
         calcTransitionMatrix(sequences, matchColumns);
+
+        Util.toLog(transitionMatrix);
+        Util.toLog(emissionMatrix);
     }
 
     public double[][] getTransitionMatrix() {

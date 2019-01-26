@@ -3,11 +3,11 @@ package phmm;
 import fasta.FASTASequence;
 import static org.junit.Assert.assertArrayEquals;
 import org.junit.Test;
+import util.Util;
 
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 
 public class ProfileHMMTest {
 
@@ -21,7 +21,7 @@ public class ProfileHMMTest {
         sequences.add(new FASTASequence("4", new char[]{'-', '-', 'A', 'A', 'A', 'C'}));
         sequences.add(new FASTASequence("5", new char[]{'A', 'G', '-', '-', '-', 'C'}));
 
-        var observationMap = createObersavtionMap();
+        var observationMap = Util.createObersavtionMap();
 
         var profileHmm = new ProfileHMM(sequences, '-', observationMap, 1, 0.5);
 
@@ -50,6 +50,8 @@ public class ProfileHMMTest {
             }
         }
 
+        Util.toLog(expectedEmissionMatrix);
+
         assertArrayEquals(expectedEmissionMatrix, profileHmm.getEmissionMatrix());
 
     }
@@ -64,7 +66,7 @@ public class ProfileHMMTest {
         sequences.add(new FASTASequence("4", new char[]{'-', '-', 'A', 'A', 'A', 'C'}));
         sequences.add(new FASTASequence("5", new char[]{'A', 'G', '-', '-', '-', 'C'}));
 
-        var observationMap = createObersavtionMap();
+        var observationMap = Util.createObersavtionMap();
 
         var profileHmm = new ProfileHMM(sequences, '-', observationMap, 1, 0.5);
 
@@ -91,6 +93,8 @@ public class ProfileHMMTest {
             }
         }
 
+        Util.toLog(expectedEmissionMatrix);
+
         assertArrayEquals(expectedEmissionMatrix, profileHmm.getEmissionMatrix());
 
     }
@@ -105,7 +109,7 @@ public class ProfileHMMTest {
         sequences.add(new FASTASequence("4", new char[]{'-', '-', 'A', 'A', 'A', 'C'}));
         sequences.add(new FASTASequence("5", new char[]{'A', 'G', '-', '-', '-', 'C'}));
 
-        var observationMap = createObersavtionMap();
+        var observationMap = Util.createObersavtionMap();
 
         var profileHmm = new ProfileHMM(sequences, '-', observationMap, 1, 0.5);
 
@@ -130,6 +134,8 @@ public class ProfileHMMTest {
             }
         }
 
+        Util.toLog(expectedEmissionMatrix);
+
         assertArrayEquals(expectedEmissionMatrix, profileHmm.getEmissionMatrix());
 
     }
@@ -141,12 +147,12 @@ public class ProfileHMMTest {
         var sequences = new ArrayList<FASTASequence>();
 
         sequences.add(new FASTASequence("1", new char[]{'A', '-', 'C'}));
-        sequences.add(new FASTASequence("2", new char[]{'A', 'G', 'C'}));
+        sequences.add(new FASTASequence("2", new char[]{'A', 'A', 'C'}));
         sequences.add(new FASTASequence("3", new char[]{'A', 'A', '-'}));
         sequences.add(new FASTASequence("4", new char[]{'-', 'A', 'C'}));
         sequences.add(new FASTASequence("5", new char[]{'A', '-', 'C'}));
 
-        var observationMap = createObersavtionMap();
+        var observationMap = Util.createObersavtionMap();
 
         var profileHmm = new ProfileHMM(sequences, '-', observationMap, pseudoCount, 0.5);
 
@@ -180,6 +186,8 @@ public class ProfileHMMTest {
             }
         }
 
+        Util.toLog(expectedTransitionMatrix);
+
         var transitionMatrix = profileHmm.getTransitionMatrix();
 
         assertArrayEquals(expectedTransitionMatrix, transitionMatrix);
@@ -198,7 +206,7 @@ public class ProfileHMMTest {
         sequences.add(new FASTASequence("4", new char[]{'-', 'A', 'C'}));
         sequences.add(new FASTASequence("5", new char[]{'A', '-', 'C'}));
 
-        var observationMap = createObersavtionMap();
+        var observationMap = Util.createObersavtionMap();
 
         var profileHmm = new ProfileHMM(sequences, '-', observationMap, pseudoCount, 0.5);
 
@@ -229,6 +237,8 @@ public class ProfileHMMTest {
             }
         }
 
+        Util.toLog(expectedTransitionMatrix);
+
         var transitionMatrix = profileHmm.getTransitionMatrix();
 
         assertArrayEquals(expectedTransitionMatrix, transitionMatrix);
@@ -248,7 +258,7 @@ public class ProfileHMMTest {
         sequences.add(new FASTASequence("4", new char[]{'-', 'A', '-', 'C'}));
         sequences.add(new FASTASequence("5", new char[]{'A', '-', '-', '-'}));
 
-        var observationMap = createObersavtionMap();
+        var observationMap = Util.createObersavtionMap();
 
         var profileHmm = new ProfileHMM(sequences, '-', observationMap, pseudoCount, 0.5);
 
@@ -279,6 +289,8 @@ public class ProfileHMMTest {
             }
         }
 
+        Util.toLog(expectedTransitionMatrix);
+
         var transitionMatrix = profileHmm.getTransitionMatrix();
 
         assertArrayEquals(expectedTransitionMatrix, transitionMatrix);
@@ -297,7 +309,7 @@ public class ProfileHMMTest {
         sequences.add(new FASTASequence("4", new char[]{'-', 'A', 'C', 'C'}));
         sequences.add(new FASTASequence("5", new char[]{'A', '-', '-', '-'}));
 
-        var observationMap = createObersavtionMap();
+        var observationMap = Util.createObersavtionMap();
 
         var profileHmm = new ProfileHMM(sequences, '-', observationMap, pseudoCount, 0.5);
 
@@ -328,25 +340,13 @@ public class ProfileHMMTest {
             }
         }
 
+        Util.toLog(expectedTransitionMatrix);
+
         var transitionMatrix = profileHmm.getTransitionMatrix();
 
         assertArrayEquals(expectedTransitionMatrix, transitionMatrix);
 
     }
 
-
-
-
-
-
-
-    private HashMap<Character, Integer> createObersavtionMap() {
-        var observationMap = new HashMap<Character, Integer>();
-        observationMap.put('A', 0);
-        observationMap.put('C', 1);
-        observationMap.put('G', 2);
-        observationMap.put('T', 3);
-        return observationMap;
-    }
 
 }

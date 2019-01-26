@@ -141,19 +141,19 @@ public class App
 
         for (var testFile : testFiles) {
             var sequences = FASTAParser.parse(Paths.get(testFile));
-            ArrayList<ViterbiResult> vitProbabilities = new ArrayList<ViterbiResult>(testFile.length());
+            var vitProbabilities = Collections.synchronizedList(new ArrayList<ViterbiResult>(testFile.length()));
 
-            // Random random = new Random();
-            for (var sequence : sequences) {
+            sequences.parallelStream().forEach(sequence -> {
                 int[] observations = sequence.parseBasesToInt(observationMap);
-          
+
                 // calculate viterbi path and probability
-                
+
                 ViterbiResult viterbiResult = Viterbi.calc(observations, pHMM);
                 // int[] path = {1,2,0,1,0,0,1,1,0};
                 // double maxProbability = random.nextDouble();
                 vitProbabilities.add(viterbiResult);
-            }
+            });
+
             // create new file and store each probability in one line
 
             List<String> lines = new ArrayList<String>();

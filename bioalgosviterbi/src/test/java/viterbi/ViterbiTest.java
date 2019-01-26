@@ -2,7 +2,12 @@ package viterbi;
 
 import static org.junit.Assert.assertArrayEquals;
 
+import fasta.FASTASequence;
 import org.junit.Test;
+import phmm.ProfileHMM;
+import util.Util;
+
+import java.util.ArrayList;
 
 public class ViterbiTest {
     @Test
@@ -35,6 +40,28 @@ public class ViterbiTest {
         int[] expectedOutput = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2,2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 
         ViterbiResult viterbiResult = Viterbi.calc(observations, transitionMatrix, emissionMatrix);
+        System.out.println(viterbiResult.getMaxProbability());
         assertArrayEquals(expectedOutput, viterbiResult.getViterbiPath());
+    }
+
+    @Test
+    public void testViterbiPHMM() {
+        final var pseudoCount = 0.00001;
+
+        var sequences = new ArrayList<FASTASequence>();
+
+        sequences.add(new FASTASequence("1", new char[]{'-', 'T', 'G'}));
+        sequences.add(new FASTASequence("2", new char[]{'A', '-', 'G'}));
+        sequences.add(new FASTASequence("3", new char[]{'A', '-', 'G'}));
+
+        var observationMap = Util.createObersavtionMap();
+
+        var profileHmm = new ProfileHMM(sequences, '-', observationMap, pseudoCount, 0.5);
+
+        var observations = new int[]{3, 3, 3, 2};
+
+        var viterbiResult = Viterbi.calc(observations, profileHmm);
+
+
     }
 }
