@@ -105,7 +105,6 @@ public class App
                     countFalsePositives++;
                 }
             }
-            System.out.println(truePositiveRate);
 
             // write TPR and FPR to file and create roc curve and AUC value with python
             List<String> lines = Arrays.asList(truePositiveRate.toString(), falsePositiveRate.toString());
