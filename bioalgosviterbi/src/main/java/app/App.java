@@ -33,7 +33,6 @@ public class App
             Character gapSymbol = '-';
             HashMap<Character, Integer> observationMap = new HashMap<Character, Integer>(Map.of('A', 0, 'C', 1, 'G', 2, 'U', 3));
             // import training sequences
-            /*
             var trainingSequences = FASTAParser.parse(Paths.get(parameter.getTraining()));
 
             // create profil HMM with test sequences
@@ -43,7 +42,7 @@ public class App
             ArrayList<String> testFiles = getFileList(parameter.getTest());
 
             runVitberiOnTestFiles(parameter, observationMap, testFiles, pHMM);
-            */
+            
             // create roc curve
             if (parameter.isRocCurve()) {
                 rocCurve(parameter);
