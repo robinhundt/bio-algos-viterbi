@@ -33,6 +33,7 @@ public class App
             Character gapSymbol = '-';
             HashMap<Character, Integer> observationMap = new HashMap<Character, Integer>(Map.of('A', 0, 'C', 1, 'G', 2, 'U', 3));
             // import training sequences
+            /*
             var trainingSequences = FASTAParser.parse(Paths.get(parameter.getTraining()));
 
             // create profil HMM with test sequences
@@ -42,7 +43,7 @@ public class App
             ArrayList<String> testFiles = getFileList(parameter.getTest());
 
             runVitberiOnTestFiles(parameter, observationMap, testFiles, pHMM);
-
+            */
             // create roc curve
             if (parameter.isRocCurve()) {
                 rocCurve(parameter);
@@ -57,7 +58,7 @@ public class App
         try {
             
             Scanner reader = new Scanner(System.in);
-            PriorityQueue<LabeledScore> allLabeledScores = new PriorityQueue<LabeledScore>();
+            ArrayList<LabeledScore> allLabeledScores = new ArrayList<LabeledScore>();
             
             int nrPositives = 0;
             int nrNegatives = 0;
@@ -73,7 +74,7 @@ public class App
                 System.out.println("Label for file:\n" + filename);
                 var label = Boolean.parseBoolean(reader.next());
 
-                PriorityQueue<LabeledScore> labeledScore = getLabeledScores(filename, label);
+                ArrayList<LabeledScore> labeledScore = getLabeledScores(filename, label);
                 
                 if (label) {
                     nrPositives += labeledScore.size();
@@ -83,9 +84,8 @@ public class App
                 allLabeledScores.addAll(labeledScore);
             }
             
-            
-            while (!allLabeledScores.isEmpty()) {
-                var score = allLabeledScores.poll();
+            Collections.sort(allLabeledScores, Collections.reverseOrder());
+            for (var score : allLabeledScores) {
                 if (score.getScore() != fPrev) {
                     truePositiveRate.add(countTruePositives/((double) nrPositives));
                     falsePositiveRate.add(countFalsePositives/((double) nrNegatives));
@@ -113,10 +113,10 @@ public class App
         }
     }
 
-    private static PriorityQueue<LabeledScore> getLabeledScores(String resultFile, boolean label)
+    private static ArrayList<LabeledScore> getLabeledScores(String resultFile, boolean label)
             throws IOException {
 
-        PriorityQueue<LabeledScore> labeledScores = new PriorityQueue<LabeledScore>();
+        ArrayList<LabeledScore> labeledScores = new ArrayList<LabeledScore>();
         Path path = Paths.get(resultFile);
         
         List<String> lines = Files.readAllLines(path);
