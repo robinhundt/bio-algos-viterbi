@@ -166,7 +166,6 @@ public class App
         String training = "";
         String test = "";
         String outputFolder = "";
-        String backgroundFile = "";
         int emissionPseudocounts = 1;
         int transitionPseudocounts = 1;
         int deleteDeletePseudocounts = 1;
@@ -183,14 +182,13 @@ public class App
                 case "trainingData": training = setting[1]; break;
                 case "testData": test = setting[1]; break;
                 case "outputFolder": outputFolder = setting[1].endsWith("/") ? setting[1] : setting[1] + "/"; break;
-                case "backgroundFile": backgroundFile = setting[1]; break;
                 case "emissionPseudocounts": emissionPseudocounts = Integer.parseInt(setting[1]); break;
                 case "transitionPseudocounts": transitionPseudocounts = Integer.parseInt(setting[1]); break;
                 case "deleteDeletePseudocounts" : deleteDeletePseudocounts = Integer.parseInt(setting[1]); break;
                 case "rocCurve": rocCurve = Boolean.parseBoolean(setting[1]); break;
             }
         }
-        return new Parameter(training, test, outputFolder, backgroundFile, emissionPseudocounts, transitionPseudocounts, deleteDeletePseudocounts, rocCurve);
+        return new Parameter(training, test, outputFolder, emissionPseudocounts, transitionPseudocounts, deleteDeletePseudocounts, rocCurve);
     }
 
     private static ArrayList<String> getFileList(String path) {

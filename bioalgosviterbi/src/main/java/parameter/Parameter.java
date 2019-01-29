@@ -4,17 +4,15 @@ public class Parameter {
     private final String training;
     private final String test;
     private final String outputFolder;
-    private final String backgroundFile;
     private final int emissionPseudocounts;
     private final int transitionPseudocounts;
     private final int deleteDeletePseudocounts;
     private final boolean rocCurve;
 
-    public Parameter(String training, String test, String outputFolder, String backgroundFile, int emissionPseudocounts, int transitionPseudocounts, int deleteDeletePseudocounts, boolean rocCurve) {
+    public Parameter(String training, String test, String outputFolder, int emissionPseudocounts, int transitionPseudocounts, int deleteDeletePseudocounts, boolean rocCurve) {
         this.training = training;
         this.test = test;
         this.outputFolder = outputFolder;
-        this.backgroundFile = backgroundFile;
         this.emissionPseudocounts = emissionPseudocounts;
         this.transitionPseudocounts = transitionPseudocounts;
         this.deleteDeletePseudocounts = deleteDeletePseudocounts;
@@ -40,13 +38,6 @@ public class Parameter {
      */
     public String getOutputFolder() {
         return outputFolder;
-    }
-
-    /**
-     * @return the backgroundFile
-     */
-    public String getBackgroundFile() {
-        return backgroundFile;
     }
 
     /**
