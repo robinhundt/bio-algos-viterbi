@@ -133,6 +133,26 @@ public class ProfileHMM {
         return state >= firstDelete && state <= lastDelete;
     }
 
+    public char[] prettyPrintPath(int[] path) {
+        var prettyPath = new char[path.length];
+
+        for(var i=0; i<path.length; i++) {
+            char prettyState;
+            var state = path[i];
+            if (stateIsMatch(state))
+                prettyState = 'M';
+            else if (stateIsInsert(state))
+                prettyState = 'I';
+            else if (stateIsDelete(state))
+                prettyState = 'D';
+            else
+                throw new IllegalArgumentException("Invalid state passed to prettyPrintPath");
+
+            prettyPath[i] = prettyState;
+        }
+        return prettyPath;
+    }
+
     public List<Integer> getPossibleSuccessorIndeces(int index) {
         var successors = new ArrayList<Integer>();
         if (index < 0 || index > lastDelete) {
