@@ -13,6 +13,7 @@ import java.nio.charset.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Hello world!
@@ -119,7 +120,10 @@ public class App
         Path path = Paths.get(resultFile);
         
         List<String> lines = Files.readAllLines(path);
+
         for (var line : lines) {
+            if (line.isEmpty())
+                continue;
             // line looks like: viterbiPath;maxProbability
             LabeledScore score = new LabeledScore(Double.parseDouble(line.split(";")[1]), label);
             labeledScores.add(score);
