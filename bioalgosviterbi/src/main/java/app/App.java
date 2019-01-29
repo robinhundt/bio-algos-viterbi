@@ -29,12 +29,6 @@ public class App
         try {
             Parameter parameter = parseParameters(args[0]);
             new File(parameter.getOutputFolder()+"rocCurve").mkdirs();
-            // var outputFolders = parameter.getOutputFolder().split("/");
-            // String folder = outputFolders[0];
-            // for (var i = 1; i<outputFolders.length; i++) {
-            //     new File(folder+"/").mkdirs();
-            //     folder += outputFolders[i];
-            // }
 
             Character gapSymbol = '-';
             HashMap<Character, Integer> observationMap = new HashMap<Character, Integer>(Map.of('A', 0, 'C', 1, 'G', 2, 'U', 3));
@@ -42,7 +36,7 @@ public class App
             var trainingSequences = FASTAParser.parse(Paths.get(parameter.getTraining()));
 
             // create profil HMM with test sequences
-            ProfileHMM pHMM = new ProfileHMM(trainingSequences, gapSymbol, observationMap, parameter.getEmissionPseudocounts()/*,parameter.getTransitionPseudocounts()*/,0.5);
+            ProfileHMM pHMM = new ProfileHMM(trainingSequences, gapSymbol, observationMap, parameter.getEmissionPseudocounts(),parameter.getTransitionPseudocounts(), parameter.getDeleteDeletePseudocounts(), 0.5);
 
             //get test sequences
             ArrayList<String> testFiles = getFileList(parameter.getTest());
@@ -143,13 +137,12 @@ public class App
             var vitProbabilities = Collections.synchronizedList(new ArrayList<ViterbiResult>(testFile.length()));
 
             sequences.parallelStream().forEach(sequence -> {
+                System.err.println(sequence.getId());
                 int[] observations = sequence.parseBasesToInt(observationMap);
 
                 // calculate viterbi path and probability
 
                 ViterbiResult viterbiResult = Viterbi.calc(observations, pHMM);
-                // int[] path = {1,2,0,1,0,0,1,1,0};
-                // double maxProbability = random.nextDouble();
                 vitProbabilities.add(viterbiResult);
             });
 
@@ -165,7 +158,6 @@ public class App
             results.createNewFile();
             Files.write(Paths.get(results.getAbsolutePath()), lines, Charset.forName("UTF-8"));
 
-            // System.out.println(observationLines.get(0));
         }
     }
 
@@ -177,6 +169,7 @@ public class App
         String backgroundFile = "";
         int emissionPseudocounts = 1;
         int transitionPseudocounts = 1;
+        int deleteDeletePseudocounts = 1;
         boolean rocCurve = false;
         for (var line: lines) {
             if (line.startsWith("//")) {
@@ -193,10 +186,11 @@ public class App
                 case "backgroundFile": backgroundFile = setting[1]; break;
                 case "emissionPseudocounts": emissionPseudocounts = Integer.parseInt(setting[1]); break;
                 case "transitionPseudocounts": transitionPseudocounts = Integer.parseInt(setting[1]); break;
+                case "deleteDeletePseudocounts" : deleteDeletePseudocounts = Integer.parseInt(setting[1]); break;
                 case "rocCurve": rocCurve = Boolean.parseBoolean(setting[1]); break;
             }
         }
-        return new Parameter(training, test, outputFolder, backgroundFile, emissionPseudocounts, transitionPseudocounts, rocCurve);
+        return new Parameter(training, test, outputFolder, backgroundFile, emissionPseudocounts, transitionPseudocounts, deleteDeletePseudocounts, rocCurve);
     }
 
     private static ArrayList<String> getFileList(String path) {
