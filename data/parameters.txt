@@ -6,4 +6,5 @@ outputFolder:target/viterbiData/
 backgroundFile:
 emissionPseudocounts:1
 transitionPseudocounts:1
+deleteDeletePseudocounts:1
 rocCurve:true

@@ -1,5 +1,9 @@
 **/*/target/
 
+.vscode
+
+.classpath
+
 # Compiled class file
 *.class
 
