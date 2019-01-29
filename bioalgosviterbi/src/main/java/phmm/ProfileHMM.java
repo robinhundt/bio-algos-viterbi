@@ -89,6 +89,32 @@ public class ProfileHMM {
         return stateCount;
     }
 
+    public int stateToColum(int state) {
+        if (state < 0 || state > lastDelete) {
+            throw new IllegalArgumentException("Can not call stateToColum with < 0 or > lastDelete");
+        }
+        if (state <= endMatch) {
+            return state;
+        } else if (state <= lastInsert) {
+            return state - firstInsert;
+        } else {
+            return state - firstDelete +1;
+        }
+    }
+
+    public int nextKindOfState(int state) {
+        if (state < 0 || state > lastDelete) {
+            throw new IllegalArgumentException("Can not call nextKindOfState with < 0 or > lastDelete");
+        }
+        if (state <= endMatch) {
+            return firstInsert;
+        } else if (state <= lastInsert) {
+            return firstDelete;
+        } else {
+            return lastDelete;
+        }
+    }
+
     public List<Integer> getPossibleSuccessorIndeces(int index) {
         var successors = new ArrayList<Integer>();
         if (index < 0 || index > lastDelete) {

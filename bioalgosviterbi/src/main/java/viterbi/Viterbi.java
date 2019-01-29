@@ -115,6 +115,11 @@ public class Viterbi {
             // we begin at column 1;
             var viterbiIdx = observationIdx + 1;
             for (int state = 1; state < countStateSpace; state++) {
+                if (profileHMM.stateToColum(state) > viterbiIdx) {
+                    state = profileHMM.nextKindOfState(state);
+                    continue;
+                }
+
                 var predecessorStates = profileHMM.getPossiblePredecessorIndeces(state);
                 var compoundProbabilities = new ArrayList<Map.Entry<Integer, Double>>();
                 for (int predecessor : predecessorStates) {
