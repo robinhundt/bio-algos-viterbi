@@ -10,7 +10,9 @@ public class ProfileHMM {
     private double[][] emissionMatrix;
 
     final private char gapSymbol;
-    final private double pseudoCount;
+    final private double emissionPseudocount;
+    final private double transitionPseudocount;
+    final private double deleteDeletePseudocount;
     final private int observationStatesCount;
     final private int columnCount;
 
@@ -28,18 +30,22 @@ public class ProfileHMM {
     public ProfileHMM(List<FASTASequence> sequences,
                       char gapSymbol,
                       Map<Character, Integer> observationMap,
-                      double pseudocount,
+                      double emissionPseudocount,
+                      double transitionPseudocount,
+                      double deleteDeletePseudocount,
                       double matchThreshold) {
         if (sequences.size() == 0 || observationMap.size() == 0) {
             throw new IllegalArgumentException("Input sequences and observationMap cannot be empty");
-        } else if (pseudocount < 0) {
-            throw new IllegalArgumentException("No negative pseudocounts permitted");
+        } else if (emissionPseudocount <= 0 || transitionPseudocount <= 0 || deleteDeletePseudocount <= 0) {
+            throw new IllegalArgumentException("No pseudocounts <= 0 permitted");
         } else if (observationMap.containsKey(gapSymbol)) {
             throw new IllegalArgumentException("Obersvation map cannot contain gap symbol");
         }
 
         this.gapSymbol = gapSymbol;
-        this.pseudoCount = pseudocount;
+        this.emissionPseudocount = emissionPseudocount;
+        this.transitionPseudocount = transitionPseudocount;
+        this.deleteDeletePseudocount = deleteDeletePseudocount;
         this.observationStatesCount = observationMap.size();
         this.columnCount = sequences.get(0).getSequence().length;
 
@@ -123,7 +129,7 @@ public class ProfileHMM {
         return state >= firstInsert && state <= lastInsert;
     }
 
-    public boolean stateIsDelet(int state) {
+    public boolean stateIsDelete(int state) {
         return state >= firstDelete && state <= lastDelete;
     }
 
@@ -254,9 +260,9 @@ public class ProfileHMM {
             if (i == endMatch)
                 continue;       // end match state has no emissions
             var rowsum = Arrays.stream(emissionMatrix[i]).sum();
-            var divisor = rowsum + pseudoCount * observationStatesCount;
+            var divisor = rowsum + emissionPseudocount * observationStatesCount;
             for(int j=0; j<emissionMatrix[i].length; j++) {
-                emissionMatrix[i][j] = (emissionMatrix[i][j] + pseudoCount) / divisor;
+                emissionMatrix[i][j] = (emissionMatrix[i][j] + emissionPseudocount) / divisor;
             }
         }
     }
@@ -348,7 +354,11 @@ public class ProfileHMM {
         }
         for(var fromState=0; fromState < transitionMatrix.length; fromState++) {
             for (int toState : getPossibleSuccessorIndeces(fromState)) {
-                transitionMatrix[fromState][toState] += pseudoCount;
+                if (stateIsDelete(fromState) && stateIsDelete(toState)) {
+                    transitionMatrix[fromState][toState] += deleteDeletePseudocount;
+                } else {
+                    transitionMatrix[fromState][toState] += transitionPseudocount;
+                }
             }
         }
         for(var fromState=0; fromState < transitionMatrix.length; fromState++) {
