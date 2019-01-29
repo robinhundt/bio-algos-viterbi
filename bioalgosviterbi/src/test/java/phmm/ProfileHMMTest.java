@@ -23,7 +23,7 @@ public class ProfileHMMTest {
 
         var observationMap = Util.createObersavtionMap();
 
-        var profileHmm = new ProfileHMM(sequences, '-', observationMap, 1, 0.5);
+        var profileHmm = new ProfileHMM(sequences, '-', observationMap, 1, 1, 1, 0.5);
 
         var expectedEmissionMatrix = new double[][]{
                 {0, 0, 0, 0},   // M0
@@ -68,7 +68,7 @@ public class ProfileHMMTest {
 
         var observationMap = Util.createObersavtionMap();
 
-        var profileHmm = new ProfileHMM(sequences, '-', observationMap, 1, 0.5);
+        var profileHmm = new ProfileHMM(sequences, '-', observationMap, 1, 1, 1, 0.5);
 
         var expectedEmissionMatrix = new double[][]{
                 {0, 0, 0, 0},   // M0
@@ -111,7 +111,7 @@ public class ProfileHMMTest {
 
         var observationMap = Util.createObersavtionMap();
 
-        var profileHmm = new ProfileHMM(sequences, '-', observationMap, 1, 0.5);
+        var profileHmm = new ProfileHMM(sequences, '-', observationMap, 1, 1, 1, 0.5);
 
         var expectedEmissionMatrix = new double[][]{
                 {0, 0, 0, 0},   // M0
@@ -154,7 +154,7 @@ public class ProfileHMMTest {
 
         var observationMap = Util.createObersavtionMap();
 
-        var profileHmm = new ProfileHMM(sequences, '-', observationMap, pseudoCount, 0.5);
+        var profileHmm = new ProfileHMM(sequences, '-', observationMap, pseudoCount, 1, 1, 0.5);
 
         var expectedTransitionMatrix = new double[][]{
 //                    0 1 2 3 4 0 1 2 3 1 2 3
@@ -208,7 +208,7 @@ public class ProfileHMMTest {
 
         var observationMap = Util.createObersavtionMap();
 
-        var profileHmm = new ProfileHMM(sequences, '-', observationMap, pseudoCount, 0.5);
+        var profileHmm = new ProfileHMM(sequences, '-', observationMap, pseudoCount, 1, 1, 0.5);
 
         var expectedTransitionMatrix = new double[][]{
 //                    0 1 2 3 0 1 2 1 2
@@ -260,7 +260,7 @@ public class ProfileHMMTest {
 
         var observationMap = Util.createObersavtionMap();
 
-        var profileHmm = new ProfileHMM(sequences, '-', observationMap, pseudoCount, 0.5);
+        var profileHmm = new ProfileHMM(sequences, '-', observationMap, pseudoCount, 1, 1, 0.5);
 
         var expectedTransitionMatrix = new double[][]{
 //                    0 1 2 3 0 1 2 1 2
@@ -311,7 +311,7 @@ public class ProfileHMMTest {
 
         var observationMap = Util.createObersavtionMap();
 
-        var profileHmm = new ProfileHMM(sequences, '-', observationMap, pseudoCount, 0.5);
+        var profileHmm = new ProfileHMM(sequences, '-', observationMap, pseudoCount, 1, 1, 0.5);
 
         var expectedTransitionMatrix = new double[][]{
 //                    0 1 2 3 0 1 2 1 2

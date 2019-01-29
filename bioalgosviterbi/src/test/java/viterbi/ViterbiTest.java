@@ -56,7 +56,7 @@ public class ViterbiTest {
 
         var observationMap = Util.createObersavtionMap();
 
-        var profileHmm = new ProfileHMM(sequences, '-', observationMap, pseudoCount, 0.5);
+        var profileHmm = new ProfileHMM(sequences, '-', observationMap, pseudoCount, 1, 1, 0.5);
 
         var observations = new int[]{3, 3, 3, 2};
 
