@@ -115,6 +115,18 @@ public class ProfileHMM {
         }
     }
 
+    public boolean stateIsMatch(int state) {
+        return state >= beginMatch && state <= endMatch;
+    }
+
+    public boolean stateIsInsert(int state) {
+        return state >= firstInsert && state <= lastInsert;
+    }
+
+    public boolean stateIsDelet(int state) {
+        return state >= firstDelete && state <= lastDelete;
+    }
+
     public List<Integer> getPossibleSuccessorIndeces(int index) {
         var successors = new ArrayList<Integer>();
         if (index < 0 || index > lastDelete) {
