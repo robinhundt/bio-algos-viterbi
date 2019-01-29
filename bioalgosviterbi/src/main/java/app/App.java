@@ -149,7 +149,7 @@ public class App
 
             List<String> lines = new ArrayList<String>();
             for (var vitProbability : vitProbabilities) {
-                lines.add(vitProbability.toString());
+                lines.add(String.valueOf(pHMM.prettyPrintPath(vitProbability.getViterbiPath())) + ";" + vitProbability.getMaxProbability() + "\n");
             }
             String[] file = testFile.split("/");
             String filename = file[file.length - 1];
