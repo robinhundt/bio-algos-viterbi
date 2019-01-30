@@ -3,7 +3,6 @@
 trainingData:../data/train/LSU_train.fasta
 testData:../data/test/LSU_test_1.fasta
 outputFolder:target/viterbiData/
-backgroundFile:
 emissionPseudocounts:1
 transitionPseudocounts:1
 deleteDeletePseudocounts:1
