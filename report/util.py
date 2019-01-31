@@ -1,12 +1,25 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import sys
+import glob
 
-if __name__ == "__main__":
-    if (len(sys.argv) <= 1):
-        print("Please provide data file")
+def plot_hist(path):   
+    dataFile = open(path, 'r')
+    # expecting per line: viterbipath;probability
+    lines = dataFile.readlines()
+    probabilities = [line.split(';')[1] for line in lines]
+    probabilities = [float(probabilities[i][:len(probabilities[i])]) for i in range(len(probabilities))]
+
+    n, bins, patches = plt.hist(probabilities, density=True)
+
+    plt.title("Histogram of Viterbi-probabilities")
+    plt.xlabel('Viterbi-Probability')
+    plt.ylabel('Probability')
+    plt.grid(True)
+    plt.show()
     
-    dataFile = open(sys.argv[1], 'r')
+    
+def plot_roc(path):
+    dataFile = open(path, 'r')
     # expecting: first line: true positive rate
                 #second line: false positive rate
     lines = dataFile.readlines()
